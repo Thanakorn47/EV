@@ -43,13 +43,10 @@ export default {
     methods: {
         async registerUser() {
             try {
-                const response = await axios.post("https://strapi-sever-ev.onrender.com/api/customers", {
-                    data: {
+                const response = await axios.post("https://strapi-sever-ev.onrender.com/api/auth/local/register", {
                         username: this.username,
                         email: this.email,
                         password: this.password,
-                        phoneNumber: this.phoneNumber
-                    }
                 });
                 this.successMessage = "Registration successful! Please log in.";
                 this.errorMessage = '';
@@ -57,7 +54,7 @@ export default {
                 this.email = '';
                 this.password = '';
                 this.phoneNumber = '';
-
+                console.log(response.data.jwt)
             } catch (error) {
                 this.errorMessage = "Registration failed. Please try again.";
                 this.successMessage = '';

@@ -40,15 +40,15 @@ export default {
     async handleLogin() {
       try {
         const response = await axios.post("https://strapi-sever-ev.onrender.com/api/auth/local", {
-          data: {
-            identifier: this.email,
-            password: this.password
-          }
+
+          identifier: this.email,
+          password: this.password
+
         });
-        const { jwt, user } = response.data.data;
+
 
         // Store the JWT in localStorage
-        localStorage.setItem("jwt", jwt);
+        localStorage.setItem("jwt", response.data.jwt);
 
         // Redirect to homepage or another page after successful login
         this.$router.push("/");
