@@ -1,37 +1,48 @@
 <template>
-    <div class="home">
-      <header class="home-header">
-        <h1>Welcome to the Parking App</h1>
-        <p>Find and reserve parking spaces easily.</p>
-        <button @click="goToParkingList">View Available Parking</button>
-      </header>
-  
-      <section class="home-features">
-        <div class="feature">
-          <h2>Easy Reservations</h2>
-          <p>Reserve your parking spot in just a few clicks.</p>
-        </div>
-        <div class="feature">
-          <h2>Real-Time Availability</h2>
-          <p>See live parking availability in your area.</p>
-        </div>
-        <div class="feature">
-          <h2>User-Friendly Interface</h2>
-          <p>Navigate with ease through a simple, clean design.</p>
-        </div>
-      </section>
-    </div>
-  </template>
+  <div class="home">
+    <header class="home-header">
+      <h1>Welcome to the Parking App</h1>
+      <p>Find and reserve parking spaces easily.</p>
+      <button @click="goToParkingList">View Available Parking</button>
+    </header>
+
+    <section class="home-features">
+      <div class="feature" v-for="customer in customers" :key="customer.id">
+        <h2>{{ customer.username }}</h2>
+        <p>{{ customer.email }}</p>
+      </div>
+    </section>
+  </div>
+</template>
+
   
   <script>
-  export default {
-    name: "Home",
-    methods: {
-      goToParkingList() {
-        this.$router.push("/parking-list");
-      }
+  import axios from "axios";
+
+export default {
+  name: "Home",
+  data() {
+    return {
+      customers: [] // เก็บข้อมูลลูกค้า
+    };
+  },
+  methods: {
+    goToParkingList() {
+      this.$router.push("/parking-list");
     }
-  };
+  },
+  mounted() {
+    // ดึงข้อมูลจาก Strapi
+    axios
+      .get("https://strapi-sever-ev.onrender.com/api/customers") // แก้ URL เป็น Strapi endpoint ของคุณ
+      .then(response => {
+        this.customers = response.data.data; // เก็บข้อมูลลูกค้าใน data
+      })
+      .catch(error => {
+        console.error("Error fetching customers:", error);
+      });
+  }
+};
   </script>
   
   <style scoped>
