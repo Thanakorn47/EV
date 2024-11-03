@@ -1,12 +1,12 @@
 <template>
   <div id="app">
-    <Navbar />
+    <!-- <Navbar /> -->
     
     <main class="content">
       <router-view />
     </main>
     
-    <Footer />
+    <!-- <Footer /> -->
   </div>
 </template>
 
@@ -28,6 +28,16 @@ export default {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+html {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'Poppins', sans-serif;
+  background-color: #121212;
 }
 
 .content {

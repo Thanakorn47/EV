@@ -1,208 +1,160 @@
 <template>
-    <div class="parking-ticket">
-      <!-- Back button and receipt download -->
-      <div class="header">
-        <button class="back-button">⬅</button>
-        <h1>Parking ticket details</h1>
-        <button class="receipt-button">Receipt ⬇</button>
-      </div>
-  
-      <!-- Parking Details -->
-      <div class="parking-detail">
-        <div class="parking-info">
-          <div class="parking-icon">P</div>
-          <div class="parking-text">
-            <p><strong>ZG1234IG</strong> · Mamin AUTO</p>
-            <p>Zone 1 - Rovinj</p>
-            <p>Hourly parking ticket</p>
-          </div>
-        </div>
-      </div>
-  
-      <!-- Log Activities -->
-      <div class="log-activities">
-        <h2>Log activities</h2>
-        <div class="log-item">
-          <span class="log-time">15 : 06</span> <span class="log-date">03:06:2022</span>
-        </div>
-        <div class="log-item">
-          <span class="log-time">15 : 41</span> <span class="log-date">03:06:2022</span>
-        </div>
-      </div>
-  
-      <!-- Payment Information -->
-      <div class="payment-info">
-        <div class="card-details">
-          <img src="https://example.com/mastercard-logo.png" alt="Mastercard Logo" class="card-logo">
-          <p>3056****5904</p>
-          <p>Ivan Horvat · 06/26</p>
-        </div>
-        <div class="total">
-          <p><strong>Total</strong></p>
-          <p><strong>$ 1.00</strong></p>
-        </div>
-      </div>
+  <div class="parking-ticket">
+    <!-- Back button and header -->
+    <div class="header">
+      <button class="back-button" @click="goBack">⬅</button>
+      <h1>New Parking Reservation</h1>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    data() {
-      return {
-        // Data properties can go here if needed
-      };
+
+    <!-- Reservation Form -->
+    <form @submit.prevent="submitReservation">
+      <div class="form-group">
+        <label for="parking_spot">Parking Spot</label>
+        <select v-model="reservation.parking_spot" id="parking_spot" required>
+          <option v-for="spot in parkingSpots" :key="spot.id" :value="spot.id">
+            {{ spot.attributes.name }} - {{ spot.attributes.zone }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="startTime">Start Time</label>
+        <input type="datetime-local" v-model="reservation.startTime" id="startTime" required />
+      </div>
+
+      <div class="form-group">
+        <label for="endTime">End Time</label>
+        <input type="datetime-local" v-model="reservation.endTime" id="endTime" required />
+      </div>
+
+      <div class="form-group">
+        <label for="totalCost">Total Cost ($)</label>
+        <input type="number" v-model="reservation.totalCost" id="totalCost" required />
+      </div>
+
+      <div class="form-group">
+        <label for="statusRV">Status</label>
+        <select v-model="reservation.statusRV" id="statusRV">
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <button type="submit" class="submit-button">Create Reservation</button>
+    </form>
+
+    <!-- Confirmation Message -->
+    <div v-if="confirmationMessage" class="confirmation-message">
+      {{ confirmationMessage }}
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data() {
+    return {
+      reservation: {
+        parking_spot: '',  // Initially empty, filled by user selection
+        startTime: '',
+        endTime: '',
+        totalCost: 0,
+        statusRV: 'pending',
+      },
+      parkingSpots: [],         // Array to store parking spot options
+      confirmationMessage: '',  // Message to show upon successful submission
+    };
+  },
+  methods: {
+    async fetchParkingSpots() {
+      try {
+        const response = await axios.get('https://strapi-sever-ev.onrender.com/api/parking-spots');
+        this.parkingSpots = response.data.data;
+      } catch (error) {
+        console.error('Error fetching parking spots:', error);
+      }
     },
-  };
-  </script>
-  
-  <style scoped>
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    color: #333;
-  }
-  
-  .parking-ticket {
-    max-width: 600px; /* Wider max-width for larger screens */
-    width: 90%; /* Relative width for better responsiveness */
-    margin: 40px auto;
-    padding: 2rem; /* Increased padding for a balanced layout */
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .back-button,
-  .receipt-button {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-  }
-  
-  h1 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #000;
-    margin: 0;
-  }
-  
-  .parking-detail {
-    margin-top: 3.5rem;
-    padding: 2.5rem;
-    background-color: #bebebe;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-  }
-  
-  .parking-info {
-    display: flex;
-    align-items: center;
-  }
-  
-  .parking-icon {
-    font-size: 2rem;
-    background-color: grey;
-    color: #fff;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin-right: 1rem;
-  }
-  
-  .parking-text p {
-    margin: 0;
-    font-size: 1rem;
-  }
-  
-  .log-activities {
-    margin-top: 1.5rem;
-  }
-  
-  .log-activities h2 {
-    font-size: 1.2rem;
-    font-weight: bold;
-  }
-  
-  .log-item {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 0.75rem;
-  }
-  
-  .log-time {
-    color: #4caf50;
-    font-size: 1rem;
-    font-weight: bold;
-  }
-  
-  .payment-info {
-    margin-top: 2.5rem;
-    padding: 2rem;
-    background-color: #bebebe;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .card-details {
-    display: flex;
-    align-items: center;
-  }
-  
-  .card-logo {
-    width: 40px;
-    height: auto;
-    margin-right: 10px;
-  }
-  
-  .total p {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: bold;
-    text-align: right;
-  }
-  
-  /* Media Query for Larger Screens */
-  @media (min-width: 768px) {
-    .parking-ticket {
-      max-width: 800px; /* Increase max-width for larger screens */
-      padding: 2.5rem; /* Add padding for a balanced layout */
+    async submitReservation() {
+      try {
+        const response = await axios.post('https://strapi-sever-ev.onrender.com/api/reservations', {
+          data: {
+            parking_spot: this.reservation.parking_spot,
+            startTime: this.reservation.startTime,
+            endTime: this.reservation.endTime,
+            totalCost: this.reservation.totalCost,
+            statusRV: this.reservation.statusRV,
+          },
+        });
+        
+        if (response.status === 200 || response.status === 201) {
+          this.confirmationMessage = 'Reservation created successfully!';
+          this.clearForm(); // Clear the form after successful submission
+        } else {
+          this.confirmationMessage = 'Failed to create reservation. Please try again.';
+        }
+      } catch (error) {
+        console.error('Error creating reservation:', error);
+        this.confirmationMessage = 'An error occurred. Please try again.';
+      }
+    },
+    goBack() {
+      this.$router.go(-1); // Navigate back to the previous page
+    },
+    clearForm() {
+      this.reservation = {
+        parking_spot: '',
+        startTime: '',
+        endTime: '',
+        totalCost: 0,
+        statusRV: 'pending',
+      };
     }
-    
-    .parking-icon {
-      width: 70px;
-      height: 70px;
-      font-size: 2.5rem;
-    }
-    
-    .back-button, .receipt-button {
-      font-size: 1.5rem;
-    }
-    
-    h1 {
-      font-size: 2rem;
-    }
-  
-    .log-time, .log-activities h2, .parking-text p {
-      font-size: 1.2rem; /* Larger text for improved readability */
-    }
-    
-    .total p {
-      font-size: 1.4rem;
-    }
-  }
-  </style>
+  },
+  mounted() {
+    this.fetchParkingSpots(); // Fetch parking spots when component mounts
+  },
+};
+</script>
+
+<style scoped>
+/* Existing styles plus form styling */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.submit-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #45a049;
+}
+
+.confirmation-message {
+  margin-top: 1rem;
+  font-weight: bold;
+  color: #4caf50;
+}
+</style>

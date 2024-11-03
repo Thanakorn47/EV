@@ -1,28 +1,39 @@
 <template>
-  <div class="login">
-    <h1>Login to ParkingApp</h1>
-    <form @submit.prevent="handleLogin">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" v-model="email" required />
+  <div class="login-page">
+    <div class="login">
+      <div class="header">
+        <span class="app-name">Smart <span class="highlight">EV</span></span>
       </div>
-
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" v-model="password" required />
+      <div class="logo">
+        <img src="/path/to/logo.png" alt="Charge & Park Logo" />
       </div>
+      <h2>Log In</h2>
+      <form @submit.prevent="handleLogin">
+        <div class="form-group">
+          <input type="email" id="email" v-model="email" placeholder="Email" required />
+        </div>
 
-      <button type="submit" class="login-button">Login</button>
+        <div class="form-group">
+          <input type="password" id="password" v-model="password" placeholder="Password" required />
+        </div>
 
-      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
-    </form>
+        <button type="submit" class="login-button">Log In</button>
 
-    <p class="register-link">
-      Don’t have an account?
-      <router-link to="/register">Register here</router-link>
-    </p>
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+
+        <div class="social-login">
+          <button class="google-login">G</button>
+        </div>
+      </form>
+
+      <p class="register-link">
+        Already have an account?
+        <router-link to="/register">register</router-link>
+      </p>
+    </div>
   </div>
 </template>
+
 
 <script>
 import axios from 'axios';
@@ -36,6 +47,7 @@ export default {
       errorMessage: ""
     };
   },
+
   methods: {
     async handleLogin() {
       try {
@@ -44,8 +56,10 @@ export default {
           identifier: this.email,
           password: this.password
 
-        });
-
+        },
+          {
+            withCredentials: true, // Include credentials
+          });
 
         // Store the JWT in localStorage
         localStorage.setItem("jwt", response.data.jwt);
@@ -67,52 +81,88 @@ export default {
 
 <style scoped>
 .login {
-  max-width: 400px;
-  margin: 2rem auto;
+  height: 100vh;
   padding: 2rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
+  color: #ffffff;
+  margin: 0;
 }
 
-h1 {
+.header {
+  font-size: 1.5rem;
+  text-align: center;
+  color: #ffffff;
+}
+
+.app-name {
+  font-weight: bold;
+}
+
+.highlight {
+  color: #00ffcc;
+  /* Adjust this color to match the green/blue accent */
+}
+
+.logo img {
+  width: 220px;
+  border-radius: 70%;
+}
+
+h2 {
   margin-bottom: 1.5rem;
-  color: #333;
+  font-size: 1.8rem;
+  color: #ffffff;
+  font-weight: bold;
 }
 
 .form-group {
   margin-bottom: 1rem;
-  text-align: left;
-}
-
-.form-group label {
-  display: block;
-  font-weight: bold;
-  color: #555;
 }
 
 .form-group input {
-  width: 100%;
-  padding: 0.5rem;
+  width: 300px;
+  padding: 0.75rem;
   font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  color: #ffffff;
+  background-color: #1e1e1e;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+}
+
+.form-group input::placeholder {
+  color: #7f8c8d;
 }
 
 .login-button {
-  width: 100%;
+  width: 300px;
   padding: 0.75rem;
   font-size: 1rem;
-  color: #fff;
-  background-color: #007bff;
+  color: #ffffff;
+  background-color: #444;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  margin-top: 1rem;
 }
 
 .login-button:hover {
-  background-color: #0056b3;
+  background-color: #333;
+}
+
+.social-login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.google-login {
+  font-size: 1.5rem;
+  color: #007bff;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .error-message {
@@ -121,12 +171,12 @@ h1 {
 }
 
 .register-link {
-  margin-top: 1rem;
-  color: #555;
+  margin-top: 2rem;
+  color: #7f8c8d;
 }
 
 .register-link a {
-  color: #007bff;
+  color: #00aaff;
   text-decoration: none;
 }
 

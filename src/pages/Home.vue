@@ -7,23 +7,23 @@
     </header>
 
     <section class="home-features">
-      <div class="feature" v-for="customer in customers" :key="customer.id">
-        <h2>{{ customer.username }}</h2>
-        <p>{{ customer.email }}</p>
-      </div>
+      <h2>{{ userName }}</h2>
+      <p>{{ email }}</p>
     </section>
   </div>
 </template>
 
-  
-  <script>
-  import axios from "axios";
+
+<script>
+import axios from "axios";
+import VueJwtDecode from 'vue-jwt-decode'
 
 export default {
   name: "Home",
   data() {
     return {
-      customers: [] // เก็บข้อมูลลูกค้า
+      userName: '', // To store the user's name
+      email: '',    // To store the user's email
     };
   },
   methods: {
@@ -31,69 +31,85 @@ export default {
       this.$router.push("/parking-list");
     }
   },
-  mounted() {
-    // ดึงข้อมูลจาก Strapi
-    axios
-      .get("https://strapi-sever-ev.onrender.com/api/customers") // แก้ URL เป็น Strapi endpoint ของคุณ
-      .then(response => {
-        this.customers = response.data.data; // เก็บข้อมูลลูกค้าใน data
-      })
-      .catch(error => {
-        console.error("Error fetching customers:", error);
-      });
+  async mounted() {
+    // Get the JWT token from local storage
+    const token = localStorage.getItem("jwt");
+
+    if (token) {
+      try {
+        // Decode the JWT token to get the user ID
+        const decoded = VueJwtDecode.decode(token);
+        const userId = decoded.id;
+        console.log(userId)
+        // Fetch user details from Strapi using the user ID
+        const response = await axios.get(`https://strapi-server-ev.onrender.com/api/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        // Set userName and email from the response
+        this.userName = response.data.username;
+        this.email = response.data.email;
+
+      } catch (error) {
+        console.error("Error fetching user details or decoding JWT:", error);
+      }
+    } else {
+      console.warn("No JWT token found. Please log in first.");
+    }
   }
 };
-  </script>
-  
-  <style scoped>
-  .home {
-    text-align: center;
-    padding: 2rem;
-  }
-  
-  .home-header {
-    margin-bottom: 2rem;
-  }
-  
-  .home-header h1 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .home-header p {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-  }
-  
-  .home-header button {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    color: #fff;
-    background-color: #007bff;
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
-  }
-  
-  .home-features {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 2rem;
-  }
-  
-  .feature {
-    width: 30%;
-    text-align: left;
-  }
-  
-  .feature h2 {
-    font-size: 1.5rem;
-    color: #333;
-  }
-  
-  .feature p {
-    font-size: 1rem;
-    color: #666;
-  }
-  </style>
-  
+</script>
+
+<style scoped>
+.home {
+  text-align: center;
+  padding: 2rem;
+}
+
+.home-header {
+  margin-bottom: 2rem;
+}
+
+.home-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.home-header p {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.home-header button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.home-features {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 2rem;
+}
+
+.feature {
+  width: 30%;
+  text-align: left;
+}
+
+.feature h2 {
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.feature p {
+  font-size: 1rem;
+  color: #666;
+}
+</style>
