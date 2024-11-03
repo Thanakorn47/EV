@@ -35,6 +35,8 @@ export default {
     // Get the JWT token from local storage
     const token = localStorage.getItem("jwt");
 
+    console.log(token);
+
     if (token) {
       try {
         // Decode the JWT token to get the user ID
@@ -42,11 +44,16 @@ export default {
         const userId = decoded.id;
         console.log(userId)
         // Fetch user details from Strapi using the user ID
-        const response = await axios.get(`https://strapi-server-ev.onrender.com/api/users/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        try {
+          const response = await axios.get('https://strapi-sever-ev.onrender.com/api/users/me', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          console.log('User data:', response.data); // Process user data here
+        } catch (error) {
+          console.error('Error fetching user data:', error.response ? error.response.data : error.message);
+        }
 
         // Set userName and email from the response
         this.userName = response.data.username;
