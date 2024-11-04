@@ -57,10 +57,10 @@ export default {
   },
   methods: {
     goToOverview() {
-      this.$router.push("/overview");
+      this.$router.push("/home");
     },
     goToSlotBooking() {
-      this.$router.push("/slot-booking");
+      this.$router.push("/slotbooking");
     },
     goToMap() {
       this.$router.push("/map");

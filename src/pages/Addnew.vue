@@ -19,9 +19,7 @@
 
         <!-- Main Content -->
         <main class="content">
-            <header class="header">
-                <input type="text" placeholder="Search" class="search-input" />
-            </header>
+
 
             <!-- Add Car Form -->
             <section class="add-car-form">
@@ -63,7 +61,7 @@ export default {
             this.$router.push("/home");
         },
         goToSlotBooking() {
-            this.$router.push("/slot-booking");
+            this.$router.push("/slotbooking");
         },
         goToServiceHistory() {
             this.$router.push("/service-history");
