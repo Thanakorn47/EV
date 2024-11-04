@@ -6,6 +6,8 @@ import Register from '../pages/Register.vue';
 import ParkingList from '../pages/ParkingList.vue';
 import ParkingDetails from '../pages/ParkingDetails.vue';
 import Profile from '../pages/Profile.vue';
+import Slotbooking from '../pages/slotbooking.vue';
+import Addnew from '../pages/addnew.vue';
 
 const routes = [
   { path: '/', component: Login},
@@ -14,6 +16,8 @@ const routes = [
   { path: '/ParkingDetails', component: ParkingDetails },
   { path: '/parking-list', component: ParkingList },
   { path: '/profile', component: Profile },
+  { path: '/slotbooking', component: Slotbooking },
+  { path: '/addnew', component: Addnew},
 ];
 
 const router = createRouter({

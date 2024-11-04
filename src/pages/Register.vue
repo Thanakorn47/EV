@@ -50,6 +50,8 @@
             email: this.email,
             password: this.password,
           });
+
+          localStorage.setItem("jwt", response.data.jwt);
           
           this.successMessage = "Registration successful! Please log in.";
           this.errorMessage = '';

@@ -20,7 +20,7 @@
       <div class="vehicle-details">
         <div class="vehicle-header">
           <h2>Vehicle Details</h2>
-          <button class="add-new">+add new</button>
+          <button class="add-new" @click="goToAddNew">+add new</button>
         </div>
         <img src="/path/to/vehicle-image.png" alt="Vehicle" class="vehicle-image" />
         <h3 class="vehicle-name">Tesla Model Y</h3>
@@ -45,7 +45,7 @@
 
 <script>
 import axios from "axios";
-import VueJwtDecode from 'vue-jwt-decode'
+import VueJwtDecode from 'vue-jwt-decode';
 
 export default {
   name: "Home",
@@ -56,17 +56,22 @@ export default {
     };
   },
   methods: {
-    goToParkingList() {
-      this.$router.push("/parking-list");
-    }
-  },
-
-  methods: {
+    goToOverview() {
+      this.$router.push("/overview");
+    },
     goToSlotBooking() {
-      this.$router.push("/parking-list");
-    }
+      this.$router.push("/slot-booking");
+    },
+    goToMap() {
+      this.$router.push("/map");
+    },
+    goToBooking() {
+      this.$router.push("/booking");
+    },
+    goToAddNew() {
+      this.$router.push("/addnew"); // Navigates to the AddNew page
+    },
   },
-
   async mounted() {
     // Get the JWT token from local storage
     const token = localStorage.getItem("jwt");
@@ -76,25 +81,25 @@ export default {
         // Decode the JWT token to get the user ID
         const decoded = VueJwtDecode.decode(token);
         const userId = decoded.id;
-        console.log(userId)
+        console.log(userId);
+
         // Fetch user details from Strapi using the user ID
         const response = await axios.get(`https://strapi-sever-ev.onrender.com/api/users/${userId}`, {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         // Set userName and email from the response
         this.userName = response.data.username;
         this.email = response.data.email;
-
       } catch (error) {
         console.error("Error fetching user details or decoding JWT:", error);
       }
     } else {
       console.warn("No JWT token found. Please log in first.");
     }
-  }
+  },
 };
 </script>
 
