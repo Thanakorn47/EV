@@ -64,7 +64,7 @@
           console.log(response.data.jwt);
           
           // Redirect to homepage or another page after successful registration
-          this.$router.push("/");
+          this.$router.push("/home");
   
         } catch (error) {
           this.errorMessage = "Registration failed. Please try again.";

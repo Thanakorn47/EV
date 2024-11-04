@@ -65,7 +65,7 @@ export default {
         localStorage.setItem("jwt", response.data.jwt);
 
         // Redirect to homepage or another page after successful login
-        this.$router.push("/");
+        this.$router.push("/home");
 
         // Clear the error message if login is successful
         this.errorMessage = "";

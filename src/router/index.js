@@ -8,8 +8,8 @@ import ParkingDetails from '../pages/ParkingDetails.vue';
 import Profile from '../pages/Profile.vue';
 
 const routes = [
-  { path: '/', component: Home },
-  { path: '/login', component: Login },
+  { path: '/', component: Login},
+  { path: '/home', component: Home},
   { path: '/register', component: Register },
   { path: '/ParkingDetails', component: ParkingDetails },
   { path: '/parking-list', component: ParkingList },

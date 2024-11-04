@@ -40,7 +40,7 @@
         // Replace this with actual logout functionality
         localStorage.removeItem("jwt")
         alert("Logged out successfully!");
-        this.$router.push("/login");
+        this.$router.push("/");
       }
     }
   };
