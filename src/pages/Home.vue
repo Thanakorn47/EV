@@ -20,7 +20,7 @@
       <div class="vehicle-details">
         <div class="vehicle-header">
           <h2>Vehicle Details</h2>
-          <button class="add-new" @click="goToAddNew">+add new</button>
+          <button class="add-new" @click="goToAddNew">+ Add New</button>
         </div>
         <img src="/path/to/vehicle-image.png" alt="Vehicle" class="vehicle-image" />
         <h3 class="vehicle-name">Tesla Model Y</h3>
@@ -29,15 +29,30 @@
           <div class="charging-slot" v-for="slot in 5" :key="slot"></div>
         </div>
       </div>
+
+      <!-- Car List Section -->
+      <section class="car-list">
+        <h2>Your Cars</h2>
+        <div v-for="car in cars" :key="car.id" class="car-card">
+          <h3>{{ car.name }}</h3>
+          <p>Model: {{ car.model }}</p>
+          <p>Year: {{ car.year }}</p>
+          <p>Status: {{ car.status }}</p>
+        </div>
+      </section>
     </main>
 
     <aside class="available-slots">
-      <h2>Available Slots</h2>
-      <div v-for="slot in 3" :key="slot.id" class="slot">
-        <p class="slot-title">A3 EV 883</p>
-        <p class="slot-status">Available</p>
-        <p class="slot-count">4 SLOTS</p>
-        <p class="slot-speed">Fast charging</p>
+      <h2>Available Stations</h2>
+      <div v-for="station in stations" :key="station.id" class="station">
+        <h3 class="station-name">{{ station.name }}</h3>
+       
+
+        <div v-for="charger in station.charger_slots" :key="charger.id" class="slot">
+          <p class="slot-title">{{ charger.name }}</p>
+          <p class="slot-status">{{ charger.available ? 'Available' : 'Not Available' }}</p>
+          <!-- <button v-if="charger.available" @click="bookSlot(charger.id)" class="book-button">Book Now</button> -->
+        </div>
       </div>
     </aside>
   </div>
@@ -51,8 +66,11 @@ export default {
   name: "Home",
   data() {
     return {
-      userName: '', // To store the user's name
-      email: '',    // To store the user's email
+      userName: '',
+      email: '',
+      cars: [],
+      stations: [], 
+      bookingHistory: []
     };
   },
   methods: {
@@ -69,32 +87,46 @@ export default {
       this.$router.push("/booking");
     },
     goToAddNew() {
-      this.$router.push("/addnew"); // Navigates to the AddNew page
-    },
+      this.$router.push("/addnew");
+    }
   },
   async mounted() {
-    // Get the JWT token from local storage
     const token = localStorage.getItem("jwt");
 
     if (token) {
       try {
-        // Decode the JWT token to get the user ID
         const decoded = VueJwtDecode.decode(token);
         const userId = decoded.id;
-        console.log(userId);
 
-        // Fetch user details from Strapi using the user ID
-        const response = await axios.get(`https://strapi-sever-ev.onrender.com/api/users/${userId}`, {
+        // Fetch user details
+        const userResponse = await axios.get(`https://strapi-sever-ev.onrender.com/api/users/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+        this.userName = userResponse.data.username;
+        this.email = userResponse.data.email;
 
-        // Set userName and email from the response
-        this.userName = response.data.username;
-        this.email = response.data.email;
+        // Fetch cars added by the user
+        const stationsResponse = await axios.get('https://strapi-sever-ev.onrender.com/api/stations?populate=*', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        // Map data for display
+        this.stations = stationsResponse.data.data.map(station => ({
+          id: station.id,
+          name: station.name,
+          location: station.location,
+          charger_slots: station.charger_slots.map(charger => ({
+            id: charger.id,
+            name: charger.name,
+            available: charger.available,
+          }))
+        }));
+
+
       } catch (error) {
-        console.error("Error fetching user details or decoding JWT:", error);
+        console.error("Error fetching data from Strapi:", error);
       }
     } else {
       console.warn("No JWT token found. Please log in first.");
@@ -253,6 +285,34 @@ h2 {
 
 .slot-count,
 .slot-speed {
+  color: #888;
+}
+
+.car-list {
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.car-list h2 {
+  margin-bottom: 1.5rem;
+}
+
+.car-card {
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.car-card h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.car-card p {
   color: #888;
 }
 </style>
