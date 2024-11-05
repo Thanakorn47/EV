@@ -17,29 +17,33 @@
     </aside>
 
     <main class="content">
-      <div class="vehicle-details">
+      <div class="vehicle-details" v-if="selectedCar">
         <div class="vehicle-header">
           <h2>Vehicle Details</h2>
           <button class="add-new" @click="goToAddNew">+ Add New</button>
         </div>
-        <img src="/path/to/vehicle-image.png" alt="Vehicle" class="vehicle-image" />
-        <h3 class="vehicle-name">Tesla Model Y</h3>
+        <img :src="getImageUrl(selectedCar.yourcar)" alt="Vehicle" class="vehicle-image" />
+        <h3 class="vehicle-name">{{selectedCar.brand +" "+ selectedCar.model }}</h3>
         <p class="charging-status">Charging</p>
         <div class="charging-indicator">
           <div class="charging-slot" v-for="slot in 5" :key="slot"></div>
         </div>
       </div>
 
+
       <!-- Car List Section -->
       <section class="car-list">
         <h2>Your Cars</h2>
-        <div v-for="car in cars" :key="car.id" class="car-card">
-          <h3>{{ car.name }}</h3>
-          <p>Model: {{ car.model }}</p>
-          <p>Year: {{ car.year }}</p>
-          <p>Status: {{ car.status }}</p>
+        <div v-for="car in filteredCars" :key="car.id" class="car-card">
+          <img :src="getImageUrl(car.yourcar)" alt="Car Image" @error="onImageError" style="width: 250px;" />
+          <div class="car-detail">
+            <p>Model: {{ car.model }}</p>
+            <p>Brand: {{ car.brand }}</p>
+          </div>
+          <button class="select-car" @click="selectCar(car)">Select this car</button>
         </div>
       </section>
+
     </main>
 
     <aside class="available-slots">
@@ -47,21 +51,14 @@
       <div v-for="station in stations" :key="station.id" class="station">
         <h3 class="station-name">{{ station.name }}</h3>
 
-        <div
-          v-for="charger in station.charger_slots"
-          :key="charger.id"
-          class="slot"
-        >
+        <div v-for="charger in station.charger_slots" :key="charger.id" class="slot">
           <p class="slot-title">{{ charger.name }}</p>
 
-          <p
-            class="slot-status"
-            :class="{ 'not-available': !charger.available }"
-          >
+          <p class="slot-status" :class="{ 'not-available': !charger.available }">
             {{ charger.available ? "Available" : "Not Available" }}
           </p>
 
-        
+
         </div>
       </div>
     </aside>
@@ -80,10 +77,24 @@ export default {
       email: '',
       cars: [],
       stations: [],
-      bookingHistory: []
+      bookingHistory: [],
+      selectedCar: null
+
     };
   },
+  computed: {
+    filteredCars() {
+      // Exclude the selected car from the car list
+      return this.cars.filter(car => car.id !== this.selectedCar?.id);
+    }
+  },
   methods: {
+    getImageUrl(path) {
+      return path ? `${import.meta.env.VITE_STRAPI_URL}${path}` : 'vehicle-image.png';
+    },
+    selectCar(car) {
+      this.selectedCar = car; // Update the displayed car
+    },
     goToOverview() {
       this.$router.push("/home");
     },
@@ -100,6 +111,7 @@ export default {
       this.$router.push("/addnew");
     }
   },
+
   async mounted() {
     const token = localStorage.getItem("jwt");
 
@@ -108,37 +120,25 @@ export default {
         const decoded = VueJwtDecode.decode(token);
         const userId = decoded.id;
 
-        // Fetch user details
+        // Fetch user details and cars
         const userResponse = await axios.get(`https://strapi-sever-ev.onrender.com/api/users/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         this.userName = userResponse.data.username;
         this.email = userResponse.data.email;
 
-        // Fetch cars added by the user
-        const stationsResponse = await axios.get('https://strapi-sever-ev.onrender.com/api/stations?populate=*', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        // Map data for display
-        this.stations = stationsResponse.data.data.map(station => ({
-          id: station.id,
-          name: station.name,
-          location: station.location,
-          charger_slots: station.charger_slots
-            .map(charger => ({
-              id: charger.id,
-              name: charger.name,
-              available: charger.available,
-              documentId: charger.documentId,
-            }))
-            .sort((a, b) => a.name.localeCompare(b.name))
+        const carResponse = await axios.get(
+          `https://strapi-sever-ev.onrender.com/api/vehicles?filters[user][id][$eq]=${userId}&populate=*`
+        );
+        this.cars = carResponse.data.data.map((car) => ({
+          id: car.id,
+          model: car.model,
+          brand: car.brand,
+          yourcar: car.yourcar.url,
         }));
 
-
-
+        // Set the first car as the default selected car
+        this.selectedCar = this.cars[0];
       } catch (error) {
         console.error("Error fetching data from Strapi:", error);
       }
@@ -146,6 +146,7 @@ export default {
       console.warn("No JWT token found. Please log in first.");
     }
   },
+
 };
 </script>
 
@@ -161,10 +162,10 @@ export default {
   width: 250px;
   padding: 1.5rem;
   background-color: #1a1a1a;
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
-  
+
 }
 
 .logo-section {
@@ -239,6 +240,15 @@ h2 {
   cursor: pointer;
 }
 
+.select-car {
+  background-color: #00ffcc;
+  color: #1e1e1e;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 .vehicle-image {
   width: 100%;
   max-width: 400px;
@@ -274,7 +284,8 @@ h2 {
   width: 250px;
   padding: 2rem;
   background-color: #1a1a1a;
-  overflow-y: auto; /* เพิ่มส่วนนี้ */
+  overflow-y: auto;
+  /* เพิ่มส่วนนี้ */
   max-height: 100vh;
 }
 
@@ -282,7 +293,7 @@ h2 {
 .available-slots h2 {
   text-align: center;
   margin-bottom: 1.5rem;
-  
+
 }
 
 .slot {
@@ -320,6 +331,9 @@ h2 {
 }
 
 .car-card {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
   background-color: #2a2a2a;
   border-radius: 8px;
   padding: 1rem;
