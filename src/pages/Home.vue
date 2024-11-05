@@ -12,6 +12,7 @@
           <li @click="goToSlotBooking">Slot booking</li>
           <li @click="goToMap">Map</li>
           <li @click="goToBooking">Booking</li>
+          <li><button @click="logout" class="logout-button">Logout</button></li>
         </ul>
       </nav>
     </aside>
@@ -67,14 +68,14 @@
 
 <script>
 import axios from "axios";
-import VueJwtDecode from 'vue-jwt-decode';
+import VueJwtDecode from "vue-jwt-decode";
 
 export default {
   name: "Home",
   data() {
     return {
-      userName: '',
-      email: '',
+      userName: "",
+      email: "",
       cars: [],
       stations: [],
       bookingHistory: [],
@@ -109,7 +110,13 @@ export default {
     },
     goToAddNew() {
       this.$router.push("/addnew");
-    }
+    },
+    logout() {
+      // Replace this with actual logout functionality
+      localStorage.removeItem("jwt");
+      alert("Logged out successfully!");
+      this.$router.push("/");
+    },
   },
 
   async mounted() {
@@ -162,6 +169,7 @@ export default {
   width: 250px;
   padding: 1.5rem;
   background-color: #1a1a1a;
+  display: flex;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -289,7 +297,6 @@ h2 {
   max-height: 100vh;
 }
 
-
 .available-slots h2 {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -351,5 +358,17 @@ h2 {
 
 .slot-status.not-available {
   color: red;
+}
+.logout-button:hover {
+  background-color:red;
+}
+.logout-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  color: #fff;
+  background-color: red;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>
