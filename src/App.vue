@@ -30,6 +30,13 @@ export default {
   min-height: 100vh;
 }
 
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0; /* Remove any default borders */
+}
+
 html {
   box-sizing: border-box;
   margin: 0;
@@ -42,6 +49,6 @@ html {
 
 .content {
   flex: 1;
-  padding: 2rem;
+  /* padding: 2rem; */
 }
 </style>
