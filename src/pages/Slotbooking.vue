@@ -20,7 +20,6 @@
             <div class="vehicle-details">
                 <div class="vehicle-header">
                     <h2>Vehicle Details</h2>
-                    <button class="add-new" @click="goToAddNew">+ Add New</button>
                 </div>
                 <img src="/path/to/vehicle-image.png" alt="Vehicle" class="vehicle-image" />
                 <h3 class="vehicle-name">Tesla Model Y</h3>
@@ -206,8 +205,8 @@ export default {
 }
 
 .logo {
-    width: 80px;
-    height: 80px;
+    width:250px;
+    height: 250px;
     border-radius: 50%;
     margin-bottom: 1rem;
 }

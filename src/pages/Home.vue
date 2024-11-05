@@ -18,34 +18,59 @@
     </aside>
 
     <main class="content">
-      <div class="vehicle-details" v-if="selectedCar">
-        <div class="vehicle-header">
-          <h2>Vehicle Details</h2>
-          <button class="add-new" @click="goToAddNew">+ Add New</button>
+  <div v-if="selectedCar" class="vehicle-details">
+    <div class="vehicle-header">
+      <h2>Vehicle Details</h2>
+    </div>
+    <img :src="getImageUrl(selectedCar.yourcar)" alt="Vehicle" class="vehicle-image" />
+    <h3 class="vehicle-name">{{ selectedCar.brand + " " + selectedCar.model }}</h3>
+    <p class="charging-status">Charging</p>
+    <div class="charging-indicator">
+      <div class="charging-slot" v-for="slot in 5" :key="slot"></div>
+    </div>
+  </div>
+
+  <!-- Display the "Add New Car" button separately -->
+  <div class="add-new-car-section">
+    <button class="add-new" @click="isAddCarModalVisible = true">+ Add New Car</button>
+  </div>
+
+  <!-- Car List Section -->
+  <section class="car-list">
+    <h2>Your Cars</h2>
+    <div class="you-car-list">
+      <div v-for="car in filteredCars" :key="car.id" class="car-card">
+        <img :src="getImageUrl(car.yourcar)" alt="Car Image" @error="onImageError" style="width: 250px;" />
+        <div class="car-detail">
+          <p>Model: {{ car.model }}</p>
+          <p>Brand: {{ car.brand }}</p>
         </div>
-        <img :src="getImageUrl(selectedCar.yourcar)" alt="Vehicle" class="vehicle-image" />
-        <h3 class="vehicle-name">{{selectedCar.brand +" "+ selectedCar.model }}</h3>
-        <p class="charging-status">Charging</p>
-        <div class="charging-indicator">
-          <div class="charging-slot" v-for="slot in 5" :key="slot"></div>
-        </div>
+        <button class="select-car" @click="selectCar(car)">Select this car</button>
       </div>
+    </div>
+  </section>
+</main>
 
-
-      <!-- Car List Section -->
-      <section class="car-list">
-        <h2>Your Cars</h2>
-        <div v-for="car in filteredCars" :key="car.id" class="car-card">
-          <img :src="getImageUrl(car.yourcar)" alt="Car Image" @error="onImageError" style="width: 250px;" />
-          <div class="car-detail">
-            <p>Model: {{ car.model }}</p>
-            <p>Brand: {{ car.brand }}</p>
+    <div v-if="isAddCarModalVisible" class="modal-overlay" @click.self="isAddCarModalVisible = false">
+      <div class="modal-content">
+        <h2>Add Your Car</h2>
+        <form @submit.prevent="addCar">
+          <div class="form-group">
+            <input type="text" v-model="brand" placeholder="Brand" required />
           </div>
-          <button class="select-car" @click="selectCar(car)">Select this car</button>
-        </div>
-      </section>
-
-    </main>
+          <div class="form-group">
+            <input type="text" v-model="model" placeholder="Model" required />
+          </div>
+          <div class="form-group">
+            <input type="file" @change="handleImageUpload" required />
+          </div>
+          <button type="submit" class="add-car-button">Add your car!</button>
+          <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
+          <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+        </form>
+        <button class="close-modal-button" @click="isAddCarModalVisible = false">Close</button>
+      </div>
+    </div>
 
     <aside class="available-slots">
       <h2>Available Stations</h2>
@@ -75,12 +100,18 @@ export default {
   data() {
     return {
       userName: "",
+      userDId: "",
       email: "",
       cars: [],
       stations: [],
       bookingHistory: [],
-      selectedCar: null
-
+      selectedCar: null,
+      brand: '',
+      model: '',
+      imageFile: null, // Holds the selected image file
+      successMessage: '',
+      errorMessage: '',
+      isAddCarModalVisible: false // Modal visibility control
     };
   },
   computed: {
@@ -108,8 +139,63 @@ export default {
     goToBooking() {
       this.$router.push("/booking");
     },
-    goToAddNew() {
-      this.$router.push("/addnew");
+    handleImageUpload(event) {
+      this.imageFile = event.target.files[0]; // Store the selected file
+    },
+    async addCar() {
+      const token = localStorage.getItem("jwt");
+      if (token) {
+        try {
+          let imageId = null;
+
+          // Step 1: Upload the image file to Strapi, if selected
+          if (this.imageFile) {
+            const formData = new FormData();
+            formData.append("files", this.imageFile);
+
+            const imageResponse = await axios.post(
+              "https://strapi-sever-ev.onrender.com/api/upload",
+              formData,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "multipart/form-data",
+                },
+              }
+            );
+            imageId = imageResponse.data[0].id; // Get the uploaded image ID
+          }
+
+          // Step 2: Add the car with image reference
+          await axios.post(
+            "https://strapi-sever-ev.onrender.com/api/vehicles",
+            {
+              data: {
+                brand: this.brand,
+                model: this.model,
+                user: this.userDId,
+                yourcar: imageId, // Associate image ID with the car
+              },
+            },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          alert("Car added successfully!");
+          this.successMessage = "Car added successfully!";
+          this.errorMessage = '';
+          this.brand = '';
+          this.model = '';
+          this.imageFile = null;
+          this.isAddCarModalVisible = false; // Close the modal after adding
+          this.$router.go(0);
+        } catch (error) {
+          this.errorMessage = "Failed to add car. Please try again.";
+          console.error("Error adding car:", error.response?.data || error);
+        }
+      } else {
+        this.errorMessage = "You are not authorized. Please log in.";
+      }
     },
     logout() {
       // Replace this with actual logout functionality
@@ -133,6 +219,7 @@ export default {
         });
         this.userName = userResponse.data.username;
         this.email = userResponse.data.email;
+        this.userDId = userResponse.data.documentId;
 
         const carResponse = await axios.get(
           `https://strapi-sever-ev.onrender.com/api/vehicles?filters[user][id][$eq]=${userId}&populate=*`
@@ -152,6 +239,26 @@ export default {
     } else {
       console.warn("No JWT token found. Please log in first.");
     }
+    const stationsResponse = await axios.get(
+      "https://strapi-sever-ev.onrender.com/api/stations?populate=*",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    this.stations = stationsResponse.data.data.map((station) => ({
+      id: station.id,
+      name: station.name,
+      location: station.location,
+      charger_slots: station.charger_slots
+        .map((charger) => ({
+          id: charger.id,
+          name: charger.name,
+          available: charger.available,
+          documentId: charger.documentId,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name)), // Sort by name here
+    }));
   },
 
 };
@@ -162,7 +269,8 @@ export default {
   display: flex;
   color: #ffffff;
   background-color: #121212;
-  min-height: 100vh;
+  /* min-height: 100vh; */
+  max-height: 100vh;
 }
 
 .sidebar {
@@ -182,8 +290,8 @@ export default {
 }
 
 .logo {
-  width: 80px;
-  height: 80px;
+  width:250px;
+  height: 250px;
   border-radius: 50%;
   margin-bottom: 1rem;
 }
@@ -231,6 +339,8 @@ h2 {
   border-radius: 12px;
   padding: 2rem;
   text-align: center;
+  height: 490px;
+  max-height: 490px;
 }
 
 .vehicle-header {
@@ -262,6 +372,9 @@ h2 {
   max-width: 400px;
   margin-top: 1rem;
   margin-bottom: 1rem;
+  max-height: 250px;
+  object-fit: cover;
+  object-position: center;
 }
 
 .vehicle-name {
@@ -293,9 +406,40 @@ h2 {
   padding: 2rem;
   background-color: #1a1a1a;
   overflow-y: auto;
-  /* เพิ่มส่วนนี้ */
   max-height: 100vh;
+
+  /* For Firefox */
+  scrollbar-width: thin;
+  /* Reduces scrollbar width */
+  scrollbar-color: #00ffcc #1a1a1a;
+  /* Thumb and track colors */
 }
+
+/* For WebKit browsers (Chrome, Safari, Edge) */
+.available-slots::-webkit-scrollbar {
+  width: 8px;
+  /* Width of the scrollbar */
+  background-color: #1a1a1a;
+  /* Track background color */
+}
+
+.available-slots::-webkit-scrollbar-thumb {
+  background-color: #00ffcc;
+  /* Thumb color */
+  border-radius: 4px;
+}
+
+.available-slots::-webkit-scrollbar-thumb:hover {
+  background-color: #00e6b8;
+  /* Thumb color on hover */
+}
+
+.available-slots::-webkit-scrollbar-track {
+  background-color: #1a1a1a;
+  /* Track background color */
+  border-radius: 4px;
+}
+
 
 .available-slots h2 {
   text-align: center;
@@ -331,11 +475,48 @@ h2 {
   padding: 1.5rem;
   margin-top: 2rem;
   text-align: center;
+  max-height: 45vh;
 }
 
 .car-list h2 {
   margin-bottom: 1.5rem;
 }
+
+.you-car-list {
+  overflow-y: auto;
+  max-height: 30vh;
+
+  /* Optional: To hide scrollbar in Webkit-based browsers */
+  scrollbar-width: thin;
+  /* For Firefox */
+  scrollbar-color: #00ffcc #1a1a1a;
+  /* Custom colors for Firefox */
+}
+
+/* For WebKit browsers */
+.you-car-list::-webkit-scrollbar {
+  width: 8px;
+  background-color: #1a1a1a;
+  /* Track background color */
+}
+
+.you-car-list::-webkit-scrollbar-thumb {
+  background-color: #00ffcc;
+  /* Thumb color */
+  border-radius: 4px;
+}
+
+.you-car-list::-webkit-scrollbar-thumb:hover {
+  background-color: #00e6b8;
+  /* Thumb color on hover */
+}
+
+.you-car-list::-webkit-scrollbar-track {
+  background-color: #1a1a1a;
+  /* Track background color */
+  border-radius: 4px;
+}
+
 
 .car-card {
   display: flex;
@@ -359,9 +540,11 @@ h2 {
 .slot-status.not-available {
   color: red;
 }
+
 .logout-button:hover {
-  background-color:red;
+  background-color: red;
 }
+
 .logout-button {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
@@ -371,4 +554,76 @@ h2 {
   border-radius: 4px;
   cursor: pointer;
 }
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #1e1e1e;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.close-modal-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #e74c3c;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  color: #ffffff;
+  background-color: #333;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+}
+
+.add-car-button {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  color: #ffffff;
+  background-color: #00ffcc;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.success-message {
+  color: #2ecc71;
+  margin-top: 1rem;
+}
+
+.error-message {
+  color: #e74c3c;
+  margin-top: 1rem;
+}
+
+.add-new-car-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem; /* Optional spacing from the top */
+}
+
 </style>

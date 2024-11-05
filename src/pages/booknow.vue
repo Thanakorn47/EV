@@ -217,8 +217,8 @@ export default {
 }
 
 .logo {
-  width: 80px;
-  height: 80px;
+  width:250px;
+  height: 250px;
   border-radius: 50%;
   margin-bottom: 1rem;
 }
