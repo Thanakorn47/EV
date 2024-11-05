@@ -33,12 +33,16 @@
             <!-- Booking History -->
             <section class="booking-history">
                 <h2>Booking History</h2>
-                <div v-for="booking in bookingHistory" :key="booking.id" class="booking-card">
-                    <p class="booking-title">{{ booking.title }}</p>
-                    <p class="booking-time">{{ booking.time }}</p>
-                    <p class="booking-slot">{{ booking.slot }}</p>
+                <div v-if="bookingHistory.length > 0">
+                    <div v-for="booking in bookingHistory" :key="booking.id" class="booking-card">
+                        <p class="booking-title">{{ booking.title }}</p>
+                        <p class="booking-time">{{ booking.time }}</p>
+                        <p class="booking-slot">Slot: {{ booking.slot }}</p>
+                    </div>
                 </div>
+                <p v-else>No booking history available.</p>
             </section>
+
         </main>
 
         <aside class="available-slots">
@@ -49,7 +53,8 @@
                 <div v-for="charger in station.charger_slots" :key="charger.id" class="slot">
                     <p class="slot-title">{{ charger.name }}</p>
                     <p class="slot-status">{{ charger.available ? 'Available' : 'Not Available' }}</p>
-                    <button v-if="charger.available" @click="bookSlot(charger.id)" class="book-button">Book Now</button>
+                    <button v-if="charger.available" @click="bookSlot(charger.documentId)" class="book-button">Book
+                        Now</button>
                 </div>
             </div>
         </aside>
@@ -68,6 +73,7 @@ export default {
             userName: '',
             email: '',
             stations: [], // Array to store station and charger data
+            bookingHistory: [] // Array to store user booking history
         };
     },
     methods: {
@@ -77,7 +83,8 @@ export default {
         goToBooking() { this.$router.push("/booking"); },
         goToAddNew() { this.$router.push("/addnew"); },
         bookSlot(chargerId) {
-            this.$router.push({ path: "/booking", query: { chargerId: chargerId } });
+            console.log(chargerId);
+            this.$router.push({ path: "/booknow", query: { chargerId: chargerId } });
         }
     },
     async mounted() {
@@ -99,16 +106,30 @@ export default {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
-                // Map data for display
                 this.stations = stationsResponse.data.data.map(station => ({
                     id: station.id,
                     name: station.name,
                     location: station.location,
-                    charger_slots: station.charger_slots.map(charger => ({
-                        id: charger.id,
-                        name: charger.name,
-                        available: charger.available,
-                    }))
+                    charger_slots: station.charger_slots
+                        .map(charger => ({
+                            id: charger.id,
+                            name: charger.name,
+                            available: charger.available,
+                            documentId: charger.documentId,
+                        }))
+                        .sort((a, b) => a.name.localeCompare(b.name)) // Sort by name here
+                }));
+
+                // Fetch booking history for the user
+                const historyResponse = await axios.get(`https://strapi-sever-ev.onrender.com/api/reservations?filters[users_permissions_user][id][$eq]=${userId}&populate=charger.station`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                this.bookingHistory = historyResponse.data.data.map(booking => ({
+                    id: booking.id,
+                    title: booking.charger.station ? booking.charger.station.name : "Unknown Station",
+                    time: `${booking.startTime} - ${booking.endTime}`,
+                    slot: booking.charger.name
                 }));
 
 
@@ -119,6 +140,7 @@ export default {
             console.warn("No JWT token found. Please log in first.");
         }
     }
+
 };
 </script>
 

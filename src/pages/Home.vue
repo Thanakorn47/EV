@@ -46,7 +46,7 @@
       <h2>Available Stations</h2>
       <div v-for="station in stations" :key="station.id" class="station">
         <h3 class="station-name">{{ station.name }}</h3>
-       
+
 
         <div v-for="charger in station.charger_slots" :key="charger.id" class="slot">
           <p class="slot-title">{{ charger.name }}</p>
@@ -69,7 +69,7 @@ export default {
       userName: '',
       email: '',
       cars: [],
-      stations: [], 
+      stations: [],
       bookingHistory: []
     };
   },
@@ -117,12 +117,16 @@ export default {
           id: station.id,
           name: station.name,
           location: station.location,
-          charger_slots: station.charger_slots.map(charger => ({
-            id: charger.id,
-            name: charger.name,
-            available: charger.available,
-          }))
+          charger_slots: station.charger_slots
+            .map(charger => ({
+              id: charger.id,
+              name: charger.name,
+              available: charger.available,
+              documentId: charger.documentId,
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name))
         }));
+
 
 
       } catch (error) {
