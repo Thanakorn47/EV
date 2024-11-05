@@ -47,11 +47,21 @@
       <div v-for="station in stations" :key="station.id" class="station">
         <h3 class="station-name">{{ station.name }}</h3>
 
-
-        <div v-for="charger in station.charger_slots" :key="charger.id" class="slot">
+        <div
+          v-for="charger in station.charger_slots"
+          :key="charger.id"
+          class="slot"
+        >
           <p class="slot-title">{{ charger.name }}</p>
-          <p class="slot-status">{{ charger.available ? 'Available' : 'Not Available' }}</p>
-          <!-- <button v-if="charger.available" @click="bookSlot(charger.id)" class="book-button">Book Now</button> -->
+
+          <p
+            class="slot-status"
+            :class="{ 'not-available': !charger.available }"
+          >
+            {{ charger.available ? "Available" : "Not Available" }}
+          </p>
+
+        
         </div>
       </div>
     </aside>
@@ -151,9 +161,10 @@ export default {
   width: 250px;
   padding: 1.5rem;
   background-color: #1a1a1a;
-  display: flex;
+  display:flex;
   flex-direction: column;
   align-items: center;
+  
 }
 
 .logo-section {
@@ -263,11 +274,15 @@ h2 {
   width: 250px;
   padding: 2rem;
   background-color: #1a1a1a;
+  overflow-y: auto; /* เพิ่มส่วนนี้ */
+  max-height: 100vh;
 }
+
 
 .available-slots h2 {
   text-align: center;
   margin-bottom: 1.5rem;
+  
 }
 
 .slot {
@@ -318,5 +333,9 @@ h2 {
 
 .car-card p {
   color: #888;
+}
+
+.slot-status.not-available {
+  color: red;
 }
 </style>
