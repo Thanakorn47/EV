@@ -5,8 +5,7 @@ import Login from '../pages/Login.vue';
 import Register from '../pages/Register.vue';
 import ParkingList from '../pages/ParkingList.vue';
 import ParkingDetails from '../pages/ParkingDetails.vue';
-import Profile from '../pages/Profile.vue';
-import Slotbooking from '../pages/slotbooking.vue';
+import Slotbooking from '../pages/Slotbooking.vue';
 import Addnew from '../pages/addnew.vue';
 import Reservation from '../pages/Reservation.vue';
 import Booknow from '../pages/booknow.vue';
@@ -21,7 +20,6 @@ const routes = [
   { path: '/register', component: Register },
   { path: '/ParkingDetails', component: ParkingDetails },
   { path: '/parking-list', component: ParkingList },
-  { path: '/profile', component: Profile },
   { path: '/slotbooking', component: Slotbooking },
   { path: '/addnew', component: Addnew},
   { path: '/reservation', component: Reservation },

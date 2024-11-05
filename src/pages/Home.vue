@@ -12,6 +12,7 @@
           <li @click="goToSlotBooking">Slot booking</li>
           <li @click="goToMap">Map</li>
           <li @click="goToBooking">Booking</li>
+          <li><button @click="logout" class="logout-button">Logout</button></li>
         </ul>
       </nav>
     </aside>
@@ -22,7 +23,11 @@
           <h2>Vehicle Details</h2>
           <button class="add-new" @click="goToAddNew">+ Add New</button>
         </div>
-        <img src="/path/to/vehicle-image.png" alt="Vehicle" class="vehicle-image" />
+        <img
+          src="/path/to/vehicle-image.png"
+          alt="Vehicle"
+          class="vehicle-image"
+        />
         <h3 class="vehicle-name">Tesla Model Y</h3>
         <p class="charging-status">Charging</p>
         <div class="charging-indicator">
@@ -60,8 +65,6 @@
           >
             {{ charger.available ? "Available" : "Not Available" }}
           </p>
-
-        
         </div>
       </div>
     </aside>
@@ -70,17 +73,17 @@
 
 <script>
 import axios from "axios";
-import VueJwtDecode from 'vue-jwt-decode';
+import VueJwtDecode from "vue-jwt-decode";
 
 export default {
   name: "Home",
   data() {
     return {
-      userName: '',
-      email: '',
+      userName: "",
+      email: "",
       cars: [],
       stations: [],
-      bookingHistory: []
+      bookingHistory: [],
     };
   },
   methods: {
@@ -98,7 +101,13 @@ export default {
     },
     goToAddNew() {
       this.$router.push("/addnew");
-    }
+    },
+    logout() {
+      // Replace this with actual logout functionality
+      localStorage.removeItem("jwt");
+      alert("Logged out successfully!");
+      this.$router.push("/");
+    },
   },
   async mounted() {
     const token = localStorage.getItem("jwt");
@@ -109,36 +118,39 @@ export default {
         const userId = decoded.id;
 
         // Fetch user details
-        const userResponse = await axios.get(`https://strapi-sever-ev.onrender.com/api/users/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const userResponse = await axios.get(
+          `https://strapi-sever-ev.onrender.com/api/users/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         this.userName = userResponse.data.username;
         this.email = userResponse.data.email;
 
         // Fetch cars added by the user
-        const stationsResponse = await axios.get('https://strapi-sever-ev.onrender.com/api/stations?populate=*', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const stationsResponse = await axios.get(
+          "https://strapi-sever-ev.onrender.com/api/stations?populate=*",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         // Map data for display
-        this.stations = stationsResponse.data.data.map(station => ({
+        this.stations = stationsResponse.data.data.map((station) => ({
           id: station.id,
           name: station.name,
           location: station.location,
           charger_slots: station.charger_slots
-            .map(charger => ({
+            .map((charger) => ({
               id: charger.id,
               name: charger.name,
               available: charger.available,
               documentId: charger.documentId,
             }))
-            .sort((a, b) => a.name.localeCompare(b.name))
+            .sort((a, b) => a.name.localeCompare(b.name)),
         }));
-
-
-
       } catch (error) {
         console.error("Error fetching data from Strapi:", error);
       }
@@ -161,10 +173,9 @@ export default {
   width: 250px;
   padding: 1.5rem;
   background-color: #1a1a1a;
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
-  
 }
 
 .logo-section {
@@ -278,11 +289,9 @@ h2 {
   max-height: 100vh;
 }
 
-
 .available-slots h2 {
   text-align: center;
   margin-bottom: 1.5rem;
-  
 }
 
 .slot {
@@ -337,5 +346,17 @@ h2 {
 
 .slot-status.not-available {
   color: red;
+}
+.logout-button:hover {
+  background-color:red;
+}
+.logout-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  color: #fff;
+  background-color: red;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>
