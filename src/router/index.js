@@ -10,6 +10,7 @@ import Slotbooking from '../pages/slotbooking.vue';
 import Addnew from '../pages/addnew.vue';
 import Reservation from '../pages/Reservation.vue';
 import Booknow from '../pages/booknow.vue';
+import Map from '../pages/map.vue';
 
 
 
@@ -25,6 +26,7 @@ const routes = [
   { path: '/addnew', component: Addnew},
   { path: '/reservation', component: Reservation },
   { path: '/booknow', component: Booknow },
+  { path: '/map', component: Map },
 ];
 
 const router = createRouter({

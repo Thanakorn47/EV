@@ -63,6 +63,9 @@ export default {
         goToSlotBooking() {
             this.$router.push("/slotbooking");
         },
+        goToMap() {
+            this.$router.push("/map");
+        },
         goToServiceHistory() {
             this.$router.push("/service-history");
         },
