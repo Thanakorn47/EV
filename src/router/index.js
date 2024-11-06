@@ -4,7 +4,7 @@ import Home from '../pages/Home.vue';
 import Login from '../pages/Login.vue';
 import Register from '../pages/Register.vue';
 import ParkingDetails from '../pages/ParkingDetails.vue';
-import Slotbooking from '../pages/slotbooking.vue';
+import Slotbooking from '../pages/Slotbooking.vue';
 import Booknow from '../pages/booknow.vue';
 import Map from '../pages/map.vue';
 
