@@ -11,7 +11,7 @@
           <li @click="goToOverview" class="active">Overview</li>
           <li @click="goToSlotBooking">Slot booking</li>
           <li @click="goToMap">Map</li>
-          <li @click="goToBooking">Booking</li>
+          <li @click="goToPayment">Payment</li>
           <li><button @click="logout" class="logout-button">Logout</button></li>
         </ul>
       </nav>
@@ -138,6 +138,9 @@ export default {
     },
     goToBooking() {
       this.$router.push("/booking");
+    },
+    goToPayment() {
+      this.$router.push("/payment");
     },
     handleImageUpload(event) {
       this.imageFile = event.target.files[0];

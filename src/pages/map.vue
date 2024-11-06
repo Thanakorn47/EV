@@ -11,7 +11,7 @@
           <li @click="goToOverview">Overview</li>
           <li @click="goToSlotBooking">Slot booking</li>
           <li @click="goToMap" class="active">Map</li>
-          <li @click="goToBooking">Booking</li>
+          <li @click="goToPayment">Payment</li>
         </ul>
       </nav>
     </aside>
@@ -47,24 +47,49 @@ export default {
     goToBooking() {
       this.$router.push("/booking");
     },
+    goToPayment() {
+      this.$router.push("/payment");
+    },
     initMap() {
-      // Center the map on a specific location (example: Chiang Rai)
-      const location = { lat: 19.9071, lng: 99.8313 };
+      // Default location (if Geolocation API is not available or permission is denied)
+      const defaultLocation = { lat: 19.9071, lng: 99.8313 }; // Chiang Rai
 
-      // Initialize the map
+      // Initialize the map centered at the default location
       this.map = new google.maps.Map(document.getElementById("map"), {
-        center: location,
+        center: defaultLocation,
         zoom: 12,
       });
 
-      // Add a marker at the location
-      new google.maps.Marker({
-        position: location,
-        map: this.map,
-        title: "Central Chiang Rai",
-      });
+      // Try to get the user's real-time location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const userLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            };
+
+            // Center the map at the user's location
+            this.map.setCenter(userLocation);
+
+            // Add a marker at the user's location
+            new google.maps.Marker({
+              position: userLocation,
+              map: this.map,
+              title: "Your Location",
+            });
+          },
+          (error) => {
+            console.warn("Geolocation error:", error);
+            alert("Could not retrieve your location. Using default location.");
+          }
+        );
+      } else {
+        alert("Geolocation is not supported by your browser.");
+      }
     },
   },
+
   async mounted() {
     const token = localStorage.getItem("jwt");
     if (typeof google !== "undefined") {
@@ -130,7 +155,7 @@ export default {
 }
 
 .logo {
-  width:250px;
+  width: 250px;
   height: 250px;
   border-radius: 50%;
   margin-bottom: 1rem;

@@ -11,7 +11,7 @@
                     <li @click="goToOverview">Overview</li>
                     <li @click="goToSlotBooking" class="active">Slot booking</li>
                     <li @click="goToMap">Map</li>
-                    <li @click="goToBooking">Booking</li>
+                    <li @click="goToPayment">Payment</li>
                 </ul>
             </nav>
         </aside>
@@ -101,6 +101,9 @@ export default {
         bookSlot(chargerId) {
             console.log(chargerId);
             this.$router.push({ path: "/booknow", query: { chargerId: chargerId } });
+        },
+        goToPayment() {
+            this.$router.push("/payment");
         },
         async cancelBooking(bookingID, chargerId) {
             await axios.delete(`https://strapi-sever-ev.onrender.com/api/reservations/${bookingID}`);
@@ -381,9 +384,9 @@ h2 {
     padding: 2rem;
     background-color: #1a1a1a;
     scrollbar-width: thin;
-  /* For Firefox */
-  scrollbar-color: #00ffcc #1a1a1a;
-  /* Custom colors for Firefox */
+    /* For Firefox */
+    scrollbar-color: #00ffcc #1a1a1a;
+    /* Custom colors for Firefox */
 }
 
 .available-slots h2 {
