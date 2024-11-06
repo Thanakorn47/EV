@@ -12,62 +12,56 @@
             <li @click="goToOverview">Overview</li>
             <li @click="goToSlotBooking">Slot booking</li>
             <li @click="goToMap">Map</li>
-            <li @click="goToBooking" class="active">Booking</li>
+            <li @click="goToPayment" class="active">Payment</li>
           </ul>
         </nav>
       </aside>
   
       <!-- Main Content -->
       <main class="content">
-    
-  
-        <!-- Charging Slot Details -->
-        <div class="charging-details">
-          <h3>A3 EV 083</h3>
-          <p class="availability">Available</p>
-          <p class="slot-info">SLOT 1</p>
+        <!-- Latest Booking Details -->
+        <div class="charging-details" v-if="latestBooking">
+          <h3>{{ latestBooking.title }}</h3>
+          <p class="availability">{{ latestBooking.available ? 'Available' : 'Not Available' }}</p>
+          <p class="slot-info">Slot: {{ latestBooking.slot }}</p>
           <p class="charging-speed">Fast charging</p>
-          <img src="/path/to/logo.png" alt="Charger Image" class="charger-image" />
+          <img src="/path/to/Chargerimg.png"  alt="Charger Image" class="charger-image" />
         </div>
   
-        <!-- Credit Card Section -->
-        <section class="credit-card-section">
-          <h4>Credit cards</h4>
-          <button class="add-button">Add +</button>
-          <div class="card-list">
-            <div class="card-item" v-for="(card, index) in creditCards" :key="index">
-              <img :src="card.typeIcon" alt="Card Type" class="card-icon" />
-              <p>{{ card.number }}</p>
-              <p>{{ card.holder }}, {{ card.expiry }}</p>
+        <!-- Booking History -->
+        <section class="booking-history">
+          <h2>Booking History</h2>
+          <div v-if="bookingHistory.length > 0" class="history-list">
+            <div v-for="booking in bookingHistory" :key="booking.id" class="booking-card">
+              <div class="sub-booking-card">
+                <p class="booking-title">{{ booking.title }}</p>
+                <p class="booking-time">{{ booking.time }}</p>
+                <p class="booking-slot">Slot: {{ booking.slot }}</p>
+              </div>
+              <button @click="cancelBooking(booking.bookingDId, booking.chargerDId)" class="cancel-booking">
+                Cancel
+              </button>
             </div>
           </div>
+          <p v-else>No booking history available.</p>
         </section>
-  
-        <!-- Pay Button -->
-        <button class="pay-button">PAY</button>
       </main>
     </div>
   </template>
   
   <script>
+  import axios from "axios";
+  import VueJwtDecode from "vue-jwt-decode";
+  
   export default {
     name: "PaymentPage",
     data() {
       return {
-        creditCards: [
-          {
-            typeIcon: "/path/to/mastercard-icon.png",
-            number: "3453****234",
-            holder: "Ivan Horvat",
-            expiry: "06/26",
-          },
-          {
-            typeIcon: "/path/to/visa-icon.png",
-            number: "3453****234",
-            holder: "Ivan Horvat",
-            expiry: "06/26",
-          },
-        ],
+        userName: "",
+        email: "",
+        userDId: "",
+        bookingHistory: [],
+        latestBooking: null,
       };
     },
     methods: {
@@ -80,9 +74,60 @@
       goToMap() {
         this.$router.push("/map");
       },
-      goToBooking() {
-        this.$router.push("/booking");
+      goToPayment() {
+        this.$router.push("/payment");
       },
+      async cancelBooking(bookingID, chargerId) {
+        await axios.delete(`https://strapi-sever-ev.onrender.com/api/reservations/${bookingID}`);
+        await axios.put(`https://strapi-sever-ev.onrender.com/api/chargers/${chargerId}`, {
+          data: { available: true },
+        });
+        alert("Cancel reservation successfully!");
+        this.$router.go(0);
+      },
+    },
+    async mounted() {
+      const token = localStorage.getItem("jwt");
+  
+      if (token) {
+        try {
+          const decoded = VueJwtDecode.decode(token);
+          const userId = decoded.id;
+  
+          // Fetch user details
+          const userResponse = await axios.get(`https://strapi-sever-ev.onrender.com/api/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          this.userName = userResponse.data.username;
+          this.email = userResponse.data.email;
+          this.userDId = userResponse.data.documentId;
+  
+          // Fetch booking history for the user
+          const historyResponse = await axios.get(
+            `https://strapi-sever-ev.onrender.com/api/reservations?filters[users_permissions_user][id][$eq]=${userId}&populate=charger.station`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+  
+          // Set booking history and latest booking
+          this.bookingHistory = historyResponse.data.data.map((booking) => ({
+            id: booking.id,
+            bookingDId: booking.documentId,
+            chargerDId: booking.charger.documentId,
+            title: booking.charger.station ? booking.charger.station.name : "Unknown Station",
+            time: `${booking.startTime} - ${booking.endTime}`,
+            slot: booking.charger.name,
+            available: booking.charger.available,
+            image: "/path/to/logo.png",
+          }));
+  
+          // Set the most recent booking as the latest booking
+          if (this.bookingHistory.length > 0) {
+            this.latestBooking = this.bookingHistory[0];
+          }
+        } catch (error) {
+          console.error("Error fetching data from Strapi:", error);
+        }
+      }
     },
   };
   </script>
@@ -107,14 +152,14 @@
   .logo-section {
     text-align: center;
     margin-bottom: 2rem;
-  }
-  
-  .logo {
-    width: 200px;
+}
+
+.logo {
+    width: 250px;
+    height: 250px;
     border-radius: 50%;
     margin-bottom: 1rem;
-  }
-  
+}
   .highlight {
     color: #00ffcc;
   }
@@ -146,20 +191,10 @@
   .content {
     flex: 1;
     padding: 2rem;
-  }
-  
-  .header {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 2rem;
-  }
-  
-  .search-bar {
-    width: 300px;
-    padding: 0.5rem;
-    border-radius: 5px;
-    border: none;
-    outline: none;
+    background-color: #121212;
+    border-radius: 10px;
+    max-width: 900px;
+    margin: 0 auto;
   }
   
   .charging-details {
@@ -168,23 +203,23 @@
     border-radius: 10px;
     margin-bottom: 2rem;
     text-align: center;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
   }
   
   .charging-details h3 {
     font-size: 1.5rem;
+    margin-bottom: 0.5rem;
   }
   
   .availability {
     color: #00ffcc;
     font-size: 1rem;
-    margin-top: 0.5rem;
   }
   
   .slot-info,
   .charging-speed {
     color: #888;
     font-size: 0.9rem;
-    margin-top: 0.2rem;
   }
   
   .charger-image {
@@ -192,56 +227,55 @@
     max-width: 300px;
     margin-top: 1rem;
     border-radius: 8px;
+    border: 1px solid #333;
   }
   
-  .credit-card-section {
-    margin-top: 1.5rem;
+  .booking-history {
+    background-color: #1e1e1e;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-top: 2rem;
   }
   
-  .credit-card-section h4 {
-    font-size: 1.2rem;
-    display: inline-block;
-  }
-  
-  .add-button {
-    float: right;
-    background-color: #00ffcc;
-    color: #000;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .card-list {
-    border-top: 1px solid #444;
+  .history-list {
     margin-top: 1rem;
-    padding-top: 1rem;
   }
   
-  .card-item {
+  .booking-card {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
-  }
-  
-  .card-icon {
-    width: 40px;
-    margin-right: 1rem;
-  }
-  
-  .pay-button {
-    background-color: #00ff66;
-    color: #000;
-    width: 50%;
+    background-color: #2a2a2a;
     padding: 1rem;
-    font-size: 1.2rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .booking-title {
+    font-size: 1.1rem;
     font-weight: bold;
-    border: none;
+    color: #ddd;
+  }
+  
+  .booking-time,
+  .booking-slot {
+    color: #888;
+    font-size: 0.9rem;
+  }
+  
+  .cancel-booking {
+    background-color: rgb(248, 131, 131);
+    border: 1px solid red;
+    color: #1e1e1e;
+    padding: 0.5rem 1rem;
     border-radius: 5px;
     cursor: pointer;
-    margin: 2rem auto 0;
-    display: block;
+    transition: background-color 0.3s;
+  }
+  
+  .cancel-booking:hover {
+    background-color: rgb(255, 0, 0);
   }
   </style>
   

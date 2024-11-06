@@ -22,8 +22,8 @@
         <p class="availability">{{ charger.available ? 'Available' : 'Not Available' }}</p>
 
         <button class="select-time-button" @click="showTimeModal = true">Select Time</button>
-        
-        <h2> {{startTime}} - {{endTime}}</h2>
+
+        <h2> {{ startTime }} - {{ endTime }}</h2>
 
         <!-- Time Selection Modal -->
         <div v-if="showTimeModal" class="modal-overlay">
@@ -66,7 +66,7 @@ export default {
       startTime: "",
       endTime: "",
       statusRV: "active",
-      timeOptions: [ "08:00", "10:00", "12:00", "14:00", "16:00"], // Example times
+      timeOptions: ["08:00", "10:00", "12:00", "14:00", "16:00"], // Example times
       showTimeModal: false // Controls modal visibility
     };
   },
@@ -96,6 +96,9 @@ export default {
     },
     goToBooking() {
       this.$router.push("/booking");
+    },
+    goToPayment() {
+      this.$router.push("/payment");
     },
 
     async createReservation() {
@@ -134,7 +137,7 @@ export default {
           }
         });
         alert("Reservation created successfully!");
-        this.goToOverview(); // Redirect to the overview page
+        this.goToPayment(); // Redirect to the overview page
       } catch (error) {
         console.error("Failed to create reservation:", error);
       }
@@ -217,7 +220,7 @@ export default {
 }
 
 .logo {
-  width:250px;
+  width: 250px;
   height: 250px;
   border-radius: 50%;
   margin-bottom: 1rem;
@@ -349,12 +352,9 @@ select {
   margin-left: 0.5rem;
 }
 
-.select-time-button{
+.select-time-button {
   background-color: #00ffcc;
   border-radius: 5px;
   padding: 0.25rem;
 }
-
-
-
 </style>
