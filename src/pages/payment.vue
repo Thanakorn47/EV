@@ -45,7 +45,7 @@
 
             <!-- Booking History -->
             <section class="booking-history">
-                <h2>Booking History</h2>
+                <h2>Payment detail</h2>
                 <div v-if="bookingHistory.length > 0" class="history-list">
                     <div v-for="booking in bookingHistory" :key="booking.id" class="booking-card">
                         <div class="sub-booking-card">
@@ -58,7 +58,7 @@
                         </button>
                     </div>
                 </div>
-                <p v-else>No booking history available.</p>
+                <p v-else>No Payment detail available.</p>
             </section>
         </main>
     </div>
