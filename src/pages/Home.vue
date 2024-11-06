@@ -18,38 +18,38 @@
     </aside>
 
     <main class="content">
-  <div v-if="selectedCar" class="vehicle-details">
-    <div class="vehicle-header">
-      <h2>Vehicle Details</h2>
-    </div>
-    <img :src="getImageUrl(selectedCar.yourcar)" alt="Vehicle" class="vehicle-image" />
-    <h3 class="vehicle-name">{{ selectedCar.brand + " " + selectedCar.model }}</h3>
-    <p class="charging-status">Charging</p>
-    <div class="charging-indicator">
-      <div class="charging-slot" v-for="slot in 5" :key="slot"></div>
-    </div>
-  </div>
-
-  <!-- Display the "Add New Car" button separately -->
-  <div class="add-new-car-section">
-    <button class="add-new" @click="isAddCarModalVisible = true">+ Add New Car</button>
-  </div>
-
-  <!-- Car List Section -->
-  <section class="car-list">
-    <h2>Your Cars</h2>
-    <div class="you-car-list">
-      <div v-for="car in filteredCars" :key="car.id" class="car-card">
-        <img :src="getImageUrl(car.yourcar)" alt="Car Image" @error="onImageError" style="width: 250px;" />
-        <div class="car-detail">
-          <p>Model: {{ car.model }}</p>
-          <p>Brand: {{ car.brand }}</p>
+      <div v-if="selectedCar" class="vehicle-details">
+        <div class="vehicle-header">
+          <h2>Vehicle Details</h2>
         </div>
-        <button class="select-car" @click="selectCar(car)">Select this car</button>
+        <img :src="getImageUrl(selectedCar.yourcar)" alt="Vehicle" class="vehicle-image" />
+        <h3 class="vehicle-name">{{ selectedCar.brand + " " + selectedCar.model }}</h3>
+        <p class="charging-status">Charging</p>
+        <div class="charging-indicator">
+          <div class="charging-slot" v-for="slot in 5" :key="slot"></div>
+        </div>
       </div>
-    </div>
-  </section>
-</main>
+
+      <!-- Display the "Add New Car" button separately -->
+      <div class="add-new-car-section">
+        <button class="add-new" @click="isAddCarModalVisible = true">+ Add New Car</button>
+      </div>
+
+      <!-- Car List Section -->
+      <section class="car-list">
+        <h2>Your Cars</h2>
+        <div class="you-car-list">
+          <div v-for="car in filteredCars" :key="car.id" class="car-card">
+            <img :src="getImageUrl(car.yourcar)" alt="Car Image" @error="onImageError" style="width: 250px;" />
+            <div class="car-detail">
+              <p>Model: {{ car.model }}</p>
+              <p>Brand: {{ car.brand }}</p>
+            </div>
+            <button class="select-car" @click="selectCar(car)">Select this car</button>
+          </div>
+        </div>
+      </section>
+    </main>
 
     <div v-if="isAddCarModalVisible" class="modal-overlay" @click.self="isAddCarModalVisible = false">
       <div class="modal-content">
@@ -105,18 +105,17 @@ export default {
       cars: [],
       stations: [],
       bookingHistory: [],
-      selectedCar: null,
+      selectedCar: null, // Holds the selected car
       brand: '',
       model: '',
-      imageFile: null, // Holds the selected image file
+      imageFile: null,
       successMessage: '',
       errorMessage: '',
-      isAddCarModalVisible: false // Modal visibility control
+      isAddCarModalVisible: false
     };
   },
   computed: {
     filteredCars() {
-      // Exclude the selected car from the car list
       return this.cars.filter(car => car.id !== this.selectedCar?.id);
     }
   },
@@ -125,7 +124,8 @@ export default {
       return path ? `${import.meta.env.VITE_STRAPI_URL}${path}` : 'vehicle-image.png';
     },
     selectCar(car) {
-      this.selectedCar = car; // Update the displayed car
+      this.selectedCar = car;
+      localStorage.setItem('selectedCar', JSON.stringify(car)); // Save to localStorage
     },
     goToOverview() {
       this.$router.push("/home");
@@ -140,7 +140,7 @@ export default {
       this.$router.push("/booking");
     },
     handleImageUpload(event) {
-      this.imageFile = event.target.files[0]; // Store the selected file
+      this.imageFile = event.target.files[0];
     },
     async addCar() {
       const token = localStorage.getItem("jwt");
@@ -188,7 +188,7 @@ export default {
           this.model = '';
           this.imageFile = null;
           this.isAddCarModalVisible = false; // Close the modal after adding
-          this.$router.go(0);
+          this.$router.go(0); // Refresh to load the new car
         } catch (error) {
           this.errorMessage = "Failed to add car. Please try again.";
           console.error("Error adding car:", error.response?.data || error);
@@ -198,13 +198,11 @@ export default {
       }
     },
     logout() {
-      // Replace this with actual logout functionality
       localStorage.removeItem("jwt");
-      alert("Logged out successfully!");
+      localStorage.removeItem("selectedCar"); // Clear selected car on logout
       this.$router.push("/");
-    },
+    }
   },
-
   async mounted() {
     const token = localStorage.getItem("jwt");
 
@@ -222,47 +220,58 @@ export default {
         this.userDId = userResponse.data.documentId;
 
         const carResponse = await axios.get(
-          `https://strapi-sever-ev.onrender.com/api/vehicles?filters[user][id][$eq]=${userId}&populate=*`
+          `https://strapi-sever-ev.onrender.com/api/vehicles?filters[user][id][$eq]=${userId}&populate=*`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
         );
         this.cars = carResponse.data.data.map((car) => ({
           id: car.id,
           model: car.model,
           brand: car.brand,
-          yourcar: car.yourcar.url,
+          yourcar: car.yourcar?.url, // Using optional chaining to handle missing images
         }));
 
-        // Set the first car as the default selected car
-        this.selectedCar = this.cars[0];
+        // Load selected car from localStorage if it exists
+        const savedCar = localStorage.getItem('selectedCar');
+        if (savedCar) {
+          this.selectedCar = JSON.parse(savedCar);
+        } else {
+          // Set the first car as the default selected car if none saved
+          this.selectedCar = this.cars[0];
+          if (this.selectedCar) {
+            localStorage.setItem('selectedCar', JSON.stringify(this.selectedCar)); // Save it to localStorage
+          }
+        }
+
+        // Fetch stations with related chargers
+        const stationsResponse = await axios.get(
+          "https://strapi-sever-ev.onrender.com/api/stations?populate=*",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        this.stations = stationsResponse.data.data.map((station) => ({
+          id: station.id,
+          name: station.name,
+          location: station.location,
+          charger_slots: station.charger_slots
+            .map((charger) => ({
+              id: charger.id,
+              name: charger.name,
+              available: charger.available,
+              documentId: charger.documentId,
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name)), // Sort by name here
+        }));
       } catch (error) {
         console.error("Error fetching data from Strapi:", error);
       }
-    } else {
-      console.warn("No JWT token found. Please log in first.");
     }
-    const stationsResponse = await axios.get(
-      "https://strapi-sever-ev.onrender.com/api/stations?populate=*",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    this.stations = stationsResponse.data.data.map((station) => ({
-      id: station.id,
-      name: station.name,
-      location: station.location,
-      charger_slots: station.charger_slots
-        .map((charger) => ({
-          id: charger.id,
-          name: charger.name,
-          available: charger.available,
-          documentId: charger.documentId,
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name)), // Sort by name here
-    }));
-  },
-
+  },  
 };
 </script>
+
 
 <style scoped>
 .home {
@@ -290,7 +299,7 @@ export default {
 }
 
 .logo {
-  width:250px;
+  width: 250px;
   height: 250px;
   border-radius: 50%;
   margin-bottom: 1rem;
@@ -623,7 +632,7 @@ h2 {
 .add-new-car-section {
   display: flex;
   justify-content: flex-end;
-  margin-top: 1rem; /* Optional spacing from the top */
+  margin-top: 1rem;
+  /* Optional spacing from the top */
 }
-
 </style>
