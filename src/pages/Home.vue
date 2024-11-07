@@ -5,7 +5,7 @@
         <img src="/path/to/logo.png" alt="Charge & Park Logo" class="logo" />
         <h2>Smart <span class="highlight">EV</span></h2>
       </div>
-      <p class="user-name">{{ userName }}</p>
+      <p class="user-name">{{ "User: "+ userName }}</p>
       <nav class="menu">
         <ul>
           <li @click="goToOverview" class="active">Overview</li>
