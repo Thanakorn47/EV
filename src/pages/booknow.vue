@@ -11,7 +11,7 @@
           <li @click="goToOverview">Overview</li>
           <li @click="goToSlotBooking" class="active">Slot Booking</li>
           <li @click="goToMap">Map</li>
-          <li @click="goToBooking">Booking</li>
+          <li @click="goToPayment" >Payment</li>
         </ul>
       </nav>
     </aside>
@@ -93,9 +93,6 @@ export default {
     },
     goToMap() {
       this.$router.push("/map");
-    },
-    goToBooking() {
-      this.$router.push("/booking");
     },
     goToPayment() {
       this.$router.push("/payment");
