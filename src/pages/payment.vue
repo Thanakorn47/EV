@@ -28,37 +28,53 @@
                 <img src="/path/to/Chargerimg.png" alt="Charger Image" class="charger-image" />
             </div>
 
-            <!-- Confirmation Modal -->
-            <div v-if="isConfirmPaymentModalVisible" class="modal-overlay"
-                @click.self="isConfirmPaymentModalVisible = false">
-                <div class="modal-content">
-                    <h2>Confirm Payment</h2>
-                    <p>Are you sure you want to select the booking:</p>
-                    <p><strong>{{ latestBooking.title }}</strong></p>
-                    <p>Slot: {{ latestBooking.slot }}</p>
-                    <p>Time: {{ latestBooking.time }}</p>
-                    <button class="confirm-button" @click="confirmPayment">Confirm</button>
+             <!-- Confirmation Modal with Card Details Form -->
+        <div v-if="isConfirmPaymentModalVisible" class="modal-overlay" @click.self="isConfirmPaymentModalVisible = false">
+            <div class="modal-content">
+                <h2>Confirm Payment</h2>
+                <p>Are you sure you want to select the booking:</p>
+                <p><strong>{{ latestBooking.title }}</strong></p>
+                <p>Slot: {{ latestBooking.slot }}</p>
+                <p>Time: {{ latestBooking.time }}</p>
+
+                    <!-- Card Details Form -->
+                    <form @submit.prevent="confirmPayment">
+                        <div class="form-group">
+                            <input type="text" v-model="cardNumber" placeholder="Card Number" required />
+                        </div>
+                        <div class="form-group">
+                            <input type="text" v-model="cardHolder" placeholder="Cardholder Name" required />
+                        </div>
+                        <div class="form-group">
+                            <input type="text" v-model="expiryDate" placeholder="Expiration Date (MM/YY)" required />
+                        </div>
+                        <div class="form-group">
+                            <input type="text" v-model="cvv" placeholder="CVV" required />
+                        </div>
+                        <button type="submit" class="confirm-button">Confirm</button>
+                    </form>
                     <button class="close-modal-button" @click="isConfirmPaymentModalVisible = false">Close</button>
                 </div>
             </div>
 
-
             <!-- Booking History -->
-            <section class="booking-history">
-                <h2>Payment detail</h2>
-                <div v-if="bookingHistory.length > 0" class="history-list">
-                    <div v-for="booking in bookingHistory" :key="booking.id" class="booking-card">
-                        <div class="sub-booking-card">
-                            <p class="booking-title">{{ booking.title }}</p>
-                            <p class="booking-time">{{ booking.time }}</p>
-                            <p class="booking-slot">Slot: {{ booking.slot }}</p>
-                        </div>
-                        <button @click="openConfirmPaymentModal(booking)" class="select-booking">
-                            Select
-                        </button>
+        <section class="booking-history">
+            <h2>Booking History</h2>
+            <div v-if="bookingHistory.length > 0" class="history-list">
+                <div v-for="booking in bookingHistory" :key="booking.id" class="booking-card">
+                    <div class="sub-booking-card">
+                        <p class="booking-title">{{ booking.title }}</p>
+                        <p class="booking-time">{{ booking.time }}</p>
+                        <p class="booking-slot">Slot: {{ booking.slot }}</p>
+                    </div>
+                    <div class="action-buttons">
+                        <button @click="openConfirmPaymentModal(booking)" class="select-button">Select</button>
+                        <button @click="cancelBooking(booking.bookingDId, booking.chargerDId)" class="cancel-button">Cancel</button>
                     </div>
                 </div>
-                <p v-else>No Payment detail available.</p>
+                    
+                </div>
+                <p v-else>No booking history available.</p>
             </section>
         </main>
     </div>
@@ -78,6 +94,11 @@ export default {
             bookingHistory: [],
             latestBooking: null,
             isConfirmPaymentModalVisible: false,
+            // Card Details
+            cardNumber: '',
+            cardHolder: '',
+            expiryDate: '',
+            cvv: '',
         };
     },
     methods: {
@@ -93,12 +114,7 @@ export default {
         goToPayment() {
             this.$router.push("/payment");
         },
-        selectBooking(booking) {
-            // Set the selected booking as the latest booking
-            this.latestBooking = booking;
-        },
         openConfirmPaymentModal(booking) {
-            // Set the selected booking as the latest booking and open the modal
             this.latestBooking = booking;
             this.isConfirmPaymentModalVisible = true;
         },
@@ -106,9 +122,23 @@ export default {
             // Implement payment confirmation logic here
             alert("Payment confirmed for booking: " + this.latestBooking.title);
             this.isConfirmPaymentModalVisible = false;
+            // Clear form fields after confirmation
+            this.cardNumber = '';
+            this.cardHolder = '';
+            this.expiryDate = '';
+            this.cvv = '';
+        },
+        async cancelBooking(bookingID, chargerId) {
+            await axios.delete(`https://strapi-sever-ev.onrender.com/api/reservations/${bookingID}`);
+            await axios.put(`https://strapi-sever-ev.onrender.com/api/chargers/${chargerId}`, {
+                data: { available: true },
+            });
+            alert("Cancel reservation successfully!");
+            this.$router.go(0);
         },
     },
     async mounted() {
+        // The mounted method fetches user data and booking history from the server
         const token = localStorage.getItem("jwt");
 
         if (token) {
@@ -142,7 +172,6 @@ export default {
                     image: "/path/to/logo.png",
                 }));
 
-                // Set the most recent booking as the latest booking
                 if (this.bookingHistory.length > 0) {
                     this.latestBooking = this.bookingHistory[0];
                 }
@@ -153,6 +182,9 @@ export default {
     },
 };
 </script>
+
+
+
 
 <style scoped>
 .payment-page {
@@ -273,6 +305,11 @@ export default {
     border-radius: 8px;
     margin-bottom: 1rem;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+
+}
+.action-buttons {
+    display: flex;
+    gap: 0.5rem; /* Space between buttons */
 }
 
 .booking-title {
@@ -342,5 +379,84 @@ export default {
   border-radius: 5px;
   cursor: pointer;
   margin-top: 1rem;
+}
+.cancel-booking {
+    background-color: rgb(248, 131, 131);
+    border: 1px solid red;
+    color: #1e1e1e;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.cancel-booking:hover {
+    background-color: rgb(255, 0, 0);
+}
+.select-button {
+    background-color: #00cc66;
+    border: 1px solid #00cc66;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.select-button:hover {
+    background-color: #00994d;
+}
+.cancel-button {
+    background-color: #e74c3c;
+    border: 1px solid #e74c3c;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cancel-button:hover {
+    background-color: #c0392b;
+}
+.card-details-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    background-color: #2a2a2a;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 400px;
+    margin: 1rem auto;
+}
+
+.form-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.form-group input {
+    padding: 0.75rem;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background-color: #333;
+    color: #fff;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #00ff66;
+    outline: none;
 }
 </style>

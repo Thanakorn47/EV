@@ -39,9 +39,8 @@
                             <p class="booking-time">{{ booking.time }}</p>
                             <p class="booking-slot">Slot: {{ booking.slot }}</p>
                         </div>
-                        <button @click="cancelBooking(booking.bookingDId, booking.chargerDId)" class="cancel-booking">
-                            Cancel
-                        </button>
+                        
+                        
                     </div>
                 </div>
                 <p v-else>No booking history available.</p>
@@ -105,14 +104,7 @@ export default {
         goToPayment() {
             this.$router.push("/payment");
         },
-        async cancelBooking(bookingID, chargerId) {
-            await axios.delete(`https://strapi-sever-ev.onrender.com/api/reservations/${bookingID}`);
-            await axios.put(`https://strapi-sever-ev.onrender.com/api/chargers/${chargerId}`, {
-                data: { available: true },
-            });
-            alert("Cancel reservation successfully!");
-            this.$router.go(0);
-        },
+        
     },
     async mounted() {
         const token = localStorage.getItem("jwt");
@@ -441,16 +433,5 @@ h2 {
     color: red;
 }
 
-.cancel-booking {
-    background-color: rgb(248, 131, 131);
-    border: 1px solid red;
-    color: #1e1e1e;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-}
 
-.cancel-booking:hover {
-    background-color: rgb(255, 0, 0);
-}
 </style>
