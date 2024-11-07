@@ -28,17 +28,18 @@
                 <img src="/path/to/Chargerimg.png" alt="Charger Image" class="charger-image" />
             </div>
 
-             <!-- Confirmation Modal with Card Details Form -->
-        <div v-if="isConfirmPaymentModalVisible" class="modal-overlay" @click.self="isConfirmPaymentModalVisible = false">
-            <div class="modal-content">
-                <h2>Confirm Payment</h2>
-                <p>Are you sure you want to select the booking:</p>
-                <p><strong>{{ latestBooking.title }}</strong></p>
-                <p>Slot: {{ latestBooking.slot }}</p>
-                <p>Time: {{ latestBooking.time }}</p>
+            <!-- Confirmation Modal with Card Details Form -->
+            <div v-if="isConfirmPaymentModalVisible" class="modal-overlay"
+                @click.self="isConfirmPaymentModalVisible = false">
+                <div class="modal-content">
+                    <h2>Confirm Payment</h2>
+                    <p>Are you sure you want to select the booking:</p>
+                    <p><strong>{{ latestBooking.title }}</strong></p>
+                    <p>Slot: {{ latestBooking.slot }}</p>
+                    <p>Time: {{ latestBooking.time }}</p>
 
                     <!-- Card Details Form -->
-                    <form @submit.prevent="confirmPayment">
+                    <form @submit.prevent="confirmPayment(latestBooking)">
                         <div class="form-group">
                             <input type="text" v-model="cardNumber" placeholder="Card Number" required />
                         </div>
@@ -58,21 +59,22 @@
             </div>
 
             <!-- Booking History -->
-        <section class="booking-history">
-            <h2>Booking History</h2>
-            <div v-if="bookingHistory.length > 0" class="history-list">
-                <div v-for="booking in bookingHistory" :key="booking.id" class="booking-card">
-                    <div class="sub-booking-card">
-                        <p class="booking-title">{{ booking.title }}</p>
-                        <p class="booking-time">{{ booking.time }}</p>
-                        <p class="booking-slot">Slot: {{ booking.slot }}</p>
+            <section class="booking-history">
+                <h2>Booking History</h2>
+                <div v-if="bookingHistory.length > 0" class="history-list">
+                    <div v-for="booking in bookingHistory" :key="booking.id" class="booking-card">
+                        <div class="sub-booking-card">
+                            <p class="booking-title">{{ booking.title }}</p>
+                            <p class="booking-time">{{ booking.time }}</p>
+                            <p class="booking-slot">Slot: {{ booking.slot }}</p>
+                        </div>
+                        <div class="action-buttons">
+                            <button @click="openConfirmPaymentModal(booking)" class="select-button">Select</button>
+                            <button @click="cancelBooking(booking.bookingDId, booking.chargerDId)"
+                                class="cancel-button">Cancel</button>
+                        </div>
                     </div>
-                    <div class="action-buttons">
-                        <button @click="openConfirmPaymentModal(booking)" class="select-button">Select</button>
-                        <button @click="cancelBooking(booking.bookingDId, booking.chargerDId)" class="cancel-button">Cancel</button>
-                    </div>
-                </div>
-                    
+
                 </div>
                 <p v-else>No booking history available.</p>
             </section>
@@ -91,6 +93,7 @@ export default {
             userName: "",
             email: "",
             userDId: "",
+            usertoken: "",
             bookingHistory: [],
             latestBooking: null,
             isConfirmPaymentModalVisible: false,
@@ -118,8 +121,32 @@ export default {
             this.latestBooking = booking;
             this.isConfirmPaymentModalVisible = true;
         },
-        confirmPayment() {
+        async confirmPayment(booking) {
             // Implement payment confirmation logic here
+            console.log(this.usertokentoken);
+            console.log(this.userDId);
+            console.log(booking.bookingDId);
+            console.log(this.cardNumber);
+            console.log(this.cardHolder);
+            console.log(this.expiryDate);
+            console.log(this.cvv);
+            await axios.post("http://localhost:1337/api/payments/", {
+                headers: { Authorization: `Bearer ${this.usertokentoken}` },
+                data: {
+                    cardNumber: this.cardNumber,
+                    card_holder_name: this.cardHolder,
+                    exp_date: this.expiryDate,
+                    cvv: this.cvv,
+                    users_permissions_user: this.userDId,
+                    reservation: booking.bookingDId
+                }
+            });
+            await axios.put(`http://localhost:1337/api/reservations/${booking.bookingDId}`, {
+                data: {
+                    payment_status: true
+                }
+            });
+
             alert("Payment confirmed for booking: " + this.latestBooking.title);
             this.isConfirmPaymentModalVisible = false;
             // Clear form fields after confirmation
@@ -140,6 +167,7 @@ export default {
     async mounted() {
         // The mounted method fetches user data and booking history from the server
         const token = localStorage.getItem("jwt");
+        this.usertokentoken = token;
 
         if (token) {
             try {
@@ -307,9 +335,11 @@ export default {
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 
 }
+
 .action-buttons {
     display: flex;
-    gap: 0.5rem; /* Space between buttons */
+    gap: 0.5rem;
+    /* Space between buttons */
 }
 
 .booking-title {
@@ -339,47 +369,48 @@ export default {
 }
 
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
 .modal-content {
-  background-color: #1e1e1e;
-  padding: 2rem;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
+    background-color: #1e1e1e;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
 }
 
 .confirm-button {
-  background-color: #00ff66;
-  color: #000;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 1rem;
+    background-color: #00ff66;
+    color: #000;
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 1rem;
 }
 
 .close-modal-button {
-  background-color: #e74c3c;
-  color: #ffffff;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 1rem;
+    background-color: #e74c3c;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 1rem;
 }
+
 .cancel-booking {
     background-color: rgb(248, 131, 131);
     border: 1px solid red;
@@ -392,6 +423,7 @@ export default {
 .cancel-booking:hover {
     background-color: rgb(255, 0, 0);
 }
+
 .select-button {
     background-color: #00cc66;
     border: 1px solid #00cc66;
@@ -401,9 +433,11 @@ export default {
     cursor: pointer;
     transition: background-color 0.3s;
 }
+
 .select-button:hover {
     background-color: #00994d;
 }
+
 .cancel-button {
     background-color: #e74c3c;
     border: 1px solid #e74c3c;
@@ -417,6 +451,7 @@ export default {
 .cancel-button:hover {
     background-color: #c0392b;
 }
+
 .card-details-form {
     display: flex;
     flex-direction: column;
