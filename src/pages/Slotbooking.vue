@@ -39,8 +39,13 @@
                             <p class="booking-time">{{ booking.time }}</p>
                             <p class="booking-slot">Slot: {{ booking.slot }}</p>
                         </div>
-                        
-                        
+                        <div class="status-buttons">
+                            <!-- Display 'Paid' button if payment_status is true -->
+                            <button v-if="booking.payment_status" class="paid-button" disabled>Payment
+                                completed</button>
+                            <button v-else class="nopay-button">Payment not completed</button>
+                        </div>
+
                     </div>
                 </div>
                 <p v-else>No booking history available.</p>
@@ -104,7 +109,7 @@ export default {
         goToPayment() {
             this.$router.push("/payment");
         },
-        
+
     },
     async mounted() {
         const token = localStorage.getItem("jwt");
@@ -158,6 +163,7 @@ export default {
                     title: booking.charger.station ? booking.charger.station.name : "Unknown Station",
                     time: `${booking.startTime} - ${booking.endTime}`,
                     slot: booking.charger.name,
+                    payment_status: booking.payment_status
                 }));
             } catch (error) {
                 console.error("Error fetching data from Strapi:", error);
@@ -433,5 +439,23 @@ h2 {
     color: red;
 }
 
+.paid-button {
+    background-color: #00cc66;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-weight: bold;
+    border: none;
+    opacity: 0.6;
+}
 
+.nopay-button {
+    background-color: red;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-weight: bold;
+    border: none;
+    opacity: 0.6;
+}
 </style>

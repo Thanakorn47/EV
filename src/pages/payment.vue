@@ -67,9 +67,13 @@
                             <p class="booking-title">{{ booking.title }}</p>
                             <p class="booking-time">{{ booking.time }}</p>
                             <p class="booking-slot">Slot: {{ booking.slot }}</p>
+                            <!-- Show status if paid -->
                         </div>
                         <div class="action-buttons">
-                            <button @click="openConfirmPaymentModal(booking)" class="select-button">Select</button>
+                            <!-- Display 'Paid' button if payment_status is true -->
+                            <button v-if="booking.payment_status" class="paid-button" disabled>Paid</button>
+                            <button v-else @click="openConfirmPaymentModal(booking)"
+                                class="select-button">Select</button>
                             <button @click="cancelBooking(booking.bookingDId, booking.chargerDId)"
                                 class="cancel-button">Cancel</button>
                         </div>
@@ -123,14 +127,7 @@ export default {
         },
         async confirmPayment(booking) {
             // Implement payment confirmation logic here
-            console.log(this.usertokentoken);
-            console.log(this.userDId);
-            console.log(booking.bookingDId);
-            console.log(this.cardNumber);
-            console.log(this.cardHolder);
-            console.log(this.expiryDate);
-            console.log(this.cvv);
-            await axios.post("http://localhost:1337/api/payments/", {
+            await axios.post("https://strapi-sever-ev.onrender.com/api/payments/", {
                 headers: { Authorization: `Bearer ${this.usertokentoken}` },
                 data: {
                     cardNumber: this.cardNumber,
@@ -140,12 +137,16 @@ export default {
                     users_permissions_user: this.userDId,
                     reservation: booking.bookingDId
                 }
+
             });
-            await axios.put(`http://localhost:1337/api/reservations/${booking.bookingDId}`, {
+
+            await axios.put(`https://strapi-sever-ev.onrender.com/api/reservations/${booking.bookingDId}`, {
                 data: {
                     payment_status: true
                 }
             });
+            booking.payment_status = true;
+            console.log(booking.payment_status)
 
             alert("Payment confirmed for booking: " + this.latestBooking.title);
             this.isConfirmPaymentModalVisible = false;
@@ -198,6 +199,7 @@ export default {
                     slot: booking.charger.name,
                     available: booking.charger.available,
                     image: "/path/to/logo.png",
+                    payment_status: booking.payment_status
                 }));
 
                 if (this.bookingHistory.length > 0) {
@@ -493,5 +495,21 @@ export default {
 .form-group input:focus {
     border-color: #00ff66;
     outline: none;
+}
+
+.status-paid {
+    color: #00ff66;
+    font-weight: bold;
+}
+
+.paid-button {
+    background-color: #00cc66;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    /* cursor: not-allowed; */
+    font-weight: bold;
+    border: none;
+    opacity: 0.6;
 }
 </style>
